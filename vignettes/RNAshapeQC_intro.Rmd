@@ -1,0 +1,324 @@
+---
+title: "RNAshapeQC: Quick Start Tutorial"
+author: "Miyeon Yeon and Won-Young Choi"
+date: "`r Sys.Date()`"
+output: BiocStyle::html_document
+vignette: >
+  %\VignetteIndexEntry{RNAshapeQC: Quick Start Tutorial}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse=TRUE,
+  comment ="#>",
+  fig.align="center"
+)
+
+suppressPackageStartupMessages({
+  library(BiocStyle)
+  library(knitr)
+  library(RNAshapeQC)
+})
+
+# Test R functions
+# devtools::document() 
+# devtools::load_all() # load development version
+# rmarkdown::render("vignettes/RNAshapeQC_intro.Rmd") # NOTE: move .html to my bioc-vignettes
+```
+
+```{r devtoolsHelper, eval=FALSE}
+# After saving DESCRIPTION
+devtools::document()  # update NAMESPACE/docs using roxygen2
+# devtools::install()
+# library(RNAshapeQC)
+devtools::build()     # build source tar.gz
+devtools::check()
+BiocCheck::BiocCheck("RNAshapeQC_0.99.0.tar.gz")
+```
+
+
+
+
+# Introduction
+
+_RNAshapeQC_ provides protocol-specific, **RNA coverage-shape-based quality control (QC) metrics**.
+
+The package is designed to:
+
+- Construct per-gene pileups from BAM files;
+- Internally derive exon-only coverage from pileups for downstream QC metrics;
+- Compute shape-based QC metrics using:
+  - decay rate for mRNA-seq,
+  - mean coverage depth and window coefficient of variation for total RNA-seq;
+- Derive sample-level quality indices:
+  - degraded/intact index,
+  - suboptimal/optimal index.
+
+
+## Overview of the workflow
+
+_RNAshapeQC_ provides two complementary workflows: one for **mRNA-seq** and one for **total RNA-seq**.
+
+### mRNA-seq
+
+1. **Decay rate (DR)**[^1]: extent of degradation, measured by the mean-corrected slope of log-transformed RNA-seq coverage (gene-by-sample level)
+2. **Degradation score (DS)**: weighted average of detectable degradation signals (sample-level)
+3. **Projection depth (PD)**: robust distance of each sample from the center of the DS distribution (sample-level)
+4. **Degraded/Intact index (DII)**: binary classification of samples as _Degraded_ or _Intact_ (sample-level)
+
+### Total RNA-seq
+
+1. **Mean coverage depth (MCD)**: measure of coverage magnitude (gene-by-sample level)
+2. **Window coefficient of variation (wCV)**: measure of coverage nonuniformity (gene-by-sample level)
+3. **Area under the curve (AUC)**: smoothed relationship between MCD and wCV (sample-level)
+4. **Projection depth (PD)**: robust distance computed using the AUC distribution (sample-level)
+5. **Suboptimal/Optimal index (SOI)**: binary classification of samples as _Suboptimal_ or _Optimal_ (sample-level)
+
+In this vignette, we illustrate a **minimal, fully runnable workflow** using small synthetic toy datasets included in the package. These toy objects mimic typical patterns of RNA degradation and coverage nonuniformity but do not contain any real cohort data.
+
+For detailed method descriptions and extended examples, please refer to the **external user manual** ([_RNAshapeQCdocs_](https://bookdown.org/sqr_yeon/RNAshapeQCdocs/)).
+
+
+
+
+# Toy Datasets
+
+Two toy objects are shipped with the package:
+
+- `TOY_mrna`: synthetic mRNA-seq-like data (`DR`, `TPM`, and `genelength.mat` matrices)
+- `TOY_total`: synthetic total RNA-seq-like data (`MCD` and `wCV` matrices)
+
+```{r DataLoad}
+data("TOY_mrna")
+data("TOY_total")
+```
+
+Each object is a simple list with:
+
+- `genes`: character vector of gene IDs
+- `samples`: character vector of sample IDs
+
+We can quickly inspect the structure as follows:
+
+```{r Str}
+str(TOY_mrna)
+
+str(TOY_total)
+```
+
+
+
+
+# mRNA-seq Example
+
+For mRNA-seq data, _RNAshapeQC_ uses the PD of DS as a sample-level degradation metric.
+
+We can derive the DII using gene weights via `get_DIIwt()` with the toy objects:
+
+```{r get_DIIwt}
+res_dii <- get_DIIwt(
+  DR             = TOY_mrna$DR, 
+  TPM            = TOY_mrna$TPM, 
+  genelength.mat = TOY_mrna$genelength.mat
+)
+
+names(res_dii)
+head(res_dii$ds.vec)
+```
+
+The returned list typically includes:
+
+- `DR2`: matrix of decay rates with filtered genes
+- `ds.vec`: data frame containing
+  - `Sample`: sample ID
+  - `DS`: degradation score
+  - `PD`: projection depth of DS
+  - `DII`: _Degraded_ or _Intact_ label based on a cutoff
+- `gene.df`: data frame with gene information used to compute gene weights
+- `s`: scale factor used to adjust gene-length and TPM medians
+
+We can plot the distributions of DS and PD, as well as the heatmap of DR with gene weights:
+
+```{r plot_DIIwt, message=FALSE, echo=TRUE}
+# Path to a temporary file
+outfile <- file.path(tempdir(), "Fig_DIIwt.png")
+
+plot_DIIwt(
+  DR        = TOY_mrna$DR,
+  DIIresult = res_dii,
+  outFile   = outfile
+)
+
+# Saving DIIwt plot to: /.../Fig_DIIwt.png
+```
+
+The function prints the file path of the saved figure in the console, and we can open the file directly from that location.
+
+```{r Fig_DIIwt, out.width="100%",out.height="100%", fig.align="center", echo=FALSE}
+knitr::include_graphics(outfile)
+```
+
+
+
+
+# Total RNA-seq Example
+
+For total RNA-seq data, _RNAshapeQC_ focuses on the relationship between MCD and wCV. 
+
+We can combine these metrics to measure coverage-shape optimality using `get_SOI()`:
+
+```{r get_SOI}
+# The cutoff value can be chosen by inspecting the PD distribution.
+res_soi <- get_SOI(
+  MCD    = TOY_total$MCD,
+  wCV    = TOY_total$wCV,
+  cutoff = 1
+)
+
+names(res_soi)
+head(res_soi$auc.vec)
+```
+
+Here, `auc.vec` contains:
+
+- `Sample`: sample ID
+- `AUC`: smoothed area under the curve in the MCD-wCV space
+- `PD`: projection depth of the AUC
+- `SOI`: _Suboptimal_ or _Optimal_ label based on a cutoff
+
+This provides a simple way to flag suboptimal total RNA-seq samples based on their coverage shape.
+
+We can visualize the smoothed relationship using `plot_SOI()`:
+
+```{r plot_SOI, message=FALSE, echo=TRUE}
+outfile <- file.path(tempdir(), "Fig_SOI.png")
+
+# The cutoff value can be chosen by inspecting the PD distribution.
+plot_SOI(
+  SOIresult = res_soi,
+  cutoff    = 1,
+  outFile   = outfile 
+)
+
+# Saving SOI plot to: /.../Fig_SOI.png
+```
+
+This figure illustrates how wCV behaves as a function of MCD, and which samples are classified as suboptimal versus optimal.
+
+```{r Fig_SOI, out.width="100%",out.height="100%", fig.align="center", echo=FALSE}
+knitr::include_graphics(outfile)
+```
+
+
+
+
+# Overview of Pileup Construction
+
+In real applications (e.g., TCGA, Alliance/CALGB), users typically start from BAM files.
+_RNAshapeQC_ provides the function `construct_pileup()`, to generate per-gene pileups from BAMs, optionally across multiple studies.
+
+For example, one might run:
+
+```{r construct_pileup, eval=FALSE}
+# Single-study mode
+construct_pileup(
+  Gene            = "KEAP1",
+  studylist       = "LUAD",   
+  regionsFile     = "/path/to/TCGA.hg19.gene.regions.txt",
+  regionsFormat   = "gencode.regions",
+  geneCol         = 1,
+  regionsCol      = 2,
+  bamFilesList    = list(
+    LUAD = luad_bam_paths   
+  ),
+  caseIDList      = list(
+    LUAD = luad_case_ids    
+  ),
+  max_depth       = 100000,
+  strand.specific = FALSE,
+  nCores          = 10,
+  outFile         = "pergene/LUAD_KEAP1_pileup.RData"  
+)
+
+# Multi-study mode
+construct_pileup(
+  Gene            = "KEAP1",
+  studylist       = c("LUAD", "HNSC"),
+  regionsFile     = "/path/to/TCGA.hg19.gene.regions.txt",
+  regionsFormat   = "gencode.regions",
+  geneCol         = 1,
+  regionsCol      = 2,
+  bamFilesList    = list(
+    LUAD = luad_bam_paths,
+    HNSC = hnsc_bam_paths
+    ),
+   caseIDList     = list(
+     LUAD = luad_case_ids,
+     HNSC = hnsc_case_ids
+   ),
+  max_depth       = 100000,
+  strand.specific = FALSE,
+  nCores          = 10,
+  outFile         = "pergene/KEAP1_pileup.RData" 
+)
+```
+
+For a **single study**, `construct_pileup()` saves `pileup`, `regions`, and `geneRanges`.  
+For **multiple studies**, it saves `pileupList`, `regions`, and `geneRanges`.
+
+Once pileups are available, users can apply the same QC metrics as in this vignette but on real RNA-seq coverage data:
+
+- `get_DR()` / `gen_DR()` for mRNA-seq degradation
+- `get_MCD()` / `gen_MCD()` and `get_wCV()` / `gen_wCV()` for total RNA-seq coverage shape
+- `get_DIIwt()` and `get_SOI()` for sample-level QC summaries
+
+***
+
+**NOTE**
+
+Full HPC/Slurm workflows (e.g., per-gene batch submission) are highly dataset- and cluster-specific. Therefore, _RNAshapeQC_ only provides simple example bash scripts under `inst/bash/`, and users can write their own R wrappers (e.g., per-gene `Rscript STUDY GENE`) following the same pattern as shown in this vignette.
+
+_RNAshapeQC_ distinguishes between two types of functions for computing QC metrics:
+
+- `get_*` functions (e.g., `get_DR()`, `get_MCD()`, `get_wCV()`)  
+  Designed to compute a **gene × sample matrix** for a given gene list in a single study. They use multicore parallelization within a single R session (via parallel / doParallel). In practice, they are typically run on a single HPC node for an entire gene list. For very large lists, users may split the gene list into chunks, run multiple `get_*` calls in separate jobs, and combine the results.
+
+- `gen_*` functions (e.g., `gen_DR()`, `gen_MCD()`, `gen_wCV()`)  
+  Designed for **per-gene jobs**, suitable for HPC/Slurm submission. 
+  They operate on a single gene at a time and can be applied to: 
+  - single-study pileup files 
+  - multi-study `pileupList` objects (e.g., TCGA-LUAD + TCGA-HNSC)
+  
+  Typical usage is one gene per job in a per-gene Slurm array, followed by combining outputs using helper functions (e.g., `combine_vecObj()`).
+  
+***
+
+
+
+
+# Summary
+
+This vignette demonstrated a minimal, runnable example of how to:
+
+- load toy QC datasets (`TOY_mrna`, `TOY_total`),
+- use `get_DIIwt()` to derive a degraded/intact index from DR,
+- use `get_SOI()` to derive a suboptimal/optimal index from MCD and wCV,
+- understand how `construct_pileup()` fits into a real BAM → coverage → QC workflow.
+
+The examples here are intentionally small and synthetic so that the vignette builds quickly and reproducibly. More detailed workflows, methodological explanations, and real-data case studies are documented separately in the full-length user manual.
+
+
+
+
+# Session Information
+
+```{r session}
+sessionInfo()
+```
+
+
+
+
+[^1]: Choi, H.Y., Jo, H., Zhao, X. et al. SCISSOR: a framework for identifying structural changes in RNA transcripts. _Nat Commun_ 12, 286 (2021). https://doi.org/10.1038/s41467-020-20593-3

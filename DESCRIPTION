@@ -1,11 +1,97 @@
 Package: RNAshapeQC
 Type: Package
-Title: What the Package Does (Title Case)
-Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Title: RNA Coverage-Shape-Based Quality Control Metrics
+Version: 0.99.0
+Authors@R: 
+    c(
+      person("Hyo Young", "Choi",
+             email = "hyoyoung.choi@uthsc.edu",
+             role = c("aut", "cph"),
+             comment = c(ORCID = "0000-0002-7627-8493")),
+      person("Miyeon", "Yeon",
+             email = "myeon@uthsc.edu",
+             role = c("aut", "cre", "cph"),
+             comment = c(ORCID = "0000-0003-1618-0643")),
+      person("Won-Young", "Choi",
+             email = "wchoi11@uthsc.edu",
+             role = c("aut", "cph"),
+             comment = c(ORCID = "0009-0003-8276-2235")),
+      person("Jin-Young", "Lee",
+             email = "jlee307@uthsc.edu",
+             role = "ctb",
+             comment = c(ORCID = "0000-0002-5366-7488")),
+      person("Katherine A.", "Hoadley",
+             email = "hoadley@med.unc.edu",
+             role = "aut",
+             comment = c(ORCID = "0000-0002-1216-477X")),
+      person("D. Neil", "Hayes",
+             email = "Neil.Hayes@uthsc.edu",
+             role = c("aut", "fnd", "cph"),
+             comment = c(ORCID = "0000-0001-6203-7771"))
+    )
+Maintainer: Miyeon Yeon <myeon@uthsc.edu>
+Description: 
+    RNAshapeQC provides coverage-shape-based quality control (QC) metrics 
+    for mRNA-seq and total RNA-seq data. It supports per-gene pileup 
+    construction from BAM files as well as toy datasets for quick-start 
+    examples. The package implements protocol-specific metrics, including 
+    decay rate (DR), degradation score (DS), mean coverage depth (MCD), 
+    window coefficient of variation (wCV), area under the curve (AUC), and 
+    shape-based sample-level indices. RNAshapeQC also includes HPC-friendly 
+    functions for per-gene batch processing and cross-study pileup generation. 
+    This package enables interpretable, protocol-specific QC assessments for 
+    diverse RNA-seq workflows.
+License: GPL-3
 Encoding: UTF-8
-LazyData: true
+LazyData: false
+RoxygenNote: 7.3.2
+Depends:
+    R (>= 4.2)
+Imports:
+    stats,
+    utils,
+    methods,
+    parallel,
+    GenomicRanges,
+    IRanges,
+    S4Vectors,
+    Rsamtools,
+    SummarizedExperiment,
+    BiocParallel,
+    SCISSOR,
+    zoo,
+    foreach,
+    doParallel,
+    ggplot2,
+    DescTools,
+    dplyr,
+    magrittr,
+    tools,
+    tidyr,
+    ComplexHeatmap,
+    circlize,
+    colortools,
+    ggpubr,
+    grid,
+    grDevices
+Suggests:
+    knitr,
+    rmarkdown,
+    BiocStyle,
+    testthat (>= 3.0.0),
+    PupillometryR,
+    matrixStats,
+    RColorBrewer,
+    scales,
+    tibble
+biocViews: 
+    RNASeq,
+    QualityControl,
+    Transcriptomics,
+    Coverage,
+    Software,
+    Sequencing,
+    GenomicRanges
+URL: https://github.com/hyochoi/RNAshapeQC
+BugReports: https://github.com/hyochoi/RNAshapeQC/issues
+VignetteBuilder: knitr
