@@ -48,7 +48,7 @@ The package is designed to:
 
 ## Overview of the workflow
 
-_RNAshapeQC_ provides two complementary workflows: one for **mRNA-seq** and one for **total RNA-seq**.
+_RNAshapeQC_ provides two complementary workflows: one for mRNA-seq and one for total RNA-seq.
 
 ### mRNA-seq
 
@@ -65,6 +65,16 @@ _RNAshapeQC_ provides two complementary workflows: one for **mRNA-seq** and one 
 4. **Projection depth (PD)**: robust distance computed using the AUC distribution (sample-level)
 5. **Suboptimal/Optimal index (SOI)**: binary classification of samples as _Suboptimal_ or _Optimal_ (sample-level)
 
+### Recommended analysis pipeline
+
+- mRNA-seq:  
+  BAM → (BAM slicing) → pileup → DR → DS → PD → DII → downstream applications
+
+- Total RNA-seq:  
+  BAM → (BAM slicing) → pileup → MCD & wCV → AUC → PD → SOI → downstream applications
+
+This vignette focuses on users who already have processed matrices (e.g., DR/TPM/gene lengths for mRNA-seq or MCD/wCV for total RNA-seq) and want to quickly compute DII or SOI.
+
 In this vignette, we illustrate a **minimal, fully runnable workflow** using small synthetic toy datasets included in the package. These toy objects mimic typical patterns of RNA degradation and coverage nonuniformity but do not contain any real cohort data.
 
 For detailed method descriptions and extended examples, please refer to the **external user manual** ([_RNAshapeQCdocs_](https://bookdown.org/sqr_yeon/RNAshapeQCdocs/)).
@@ -74,12 +84,21 @@ For detailed method descriptions and extended examples, please refer to the **ex
 
 # Toy Datasets
 
+```{r LoadPkg, eval=FALSE}
+## Installation and loading
+# if (!requireNamespace("BiocManager", quietly=TRUE)) {
+#   install.packages("BiocManager")
+# }
+# BiocManager::install("RNAshapeQC")
+library(RNAshapeQC)
+```
+
 Two toy objects are shipped with the package:
 
 - `TOY_mrna`: synthetic mRNA-seq-like data (`DR`, `TPM`, and `genelength.mat` matrices)
 - `TOY_total`: synthetic total RNA-seq-like data (`MCD` and `wCV` matrices)
 
-```{r DataLoad}
+```{r LoadData}
 data("TOY_mrna")
 data("TOY_total")
 ```
