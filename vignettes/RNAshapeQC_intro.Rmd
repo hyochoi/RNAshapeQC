@@ -25,17 +25,6 @@ suppressPackageStartupMessages({
 # Test R functions
 # devtools::document() 
 # devtools::load_all() # load development version
-# rmarkdown::render("vignettes/RNAshapeQC_intro.Rmd") # NOTE: move .html to my bioc-vignettes
-```
-
-```{r devtoolsHelper, eval=FALSE}
-# After saving DESCRIPTION
-devtools::document()  # update NAMESPACE/docs using roxygen2
-# devtools::install()
-# library(RNAshapeQC)
-devtools::build()     # build source tar.gz
-devtools::check()
-BiocCheck::BiocCheck("RNAshapeQC_0.99.0.tar.gz")
 ```
 
 
