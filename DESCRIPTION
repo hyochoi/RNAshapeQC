@@ -4,10 +4,6 @@ Title: RNA Coverage-Shape-Based Quality Control Metrics
 Version: 0.99.0
 Authors@R: 
     c(
-      person("Hyo Young", "Choi",
-             email = "hyoyoung.choi@uthsc.edu",
-             role = c("aut", "cph"),
-             comment = c(ORCID = "0000-0002-7627-8493")),
       person("Miyeon", "Yeon",
              email = "myeon@uthsc.edu",
              role = c("aut", "cre", "cph"),
@@ -16,7 +12,7 @@ Authors@R:
              email = "wchoi11@uthsc.edu",
              role = c("aut", "cph"),
              comment = c(ORCID = "0009-0003-8276-2235")),
-      person("Jin-Young", "Lee",
+      person("Jin Young", "Lee",
              email = "jlee307@uthsc.edu",
              role = "ctb",
              comment = c(ORCID = "0000-0002-5366-7488")),
@@ -27,7 +23,11 @@ Authors@R:
       person("D. Neil", "Hayes",
              email = "Neil.Hayes@uthsc.edu",
              role = c("aut", "fnd", "cph"),
-             comment = c(ORCID = "0000-0001-6203-7771"))
+             comment = c(ORCID = "0000-0001-6203-7771")),
+      person("Hyo Young", "Choi",
+             email = "hyoyoung.choi@uthsc.edu",
+             role = c("aut", "cph"),
+             comment = c(ORCID = "0000-0002-7627-8493"))
     )
 Maintainer: Miyeon Yeon <myeon@uthsc.edu>
 Description: 
