@@ -12,7 +12,7 @@ _RNAshapeQC_ also includes HPC-friendly functions for per-gene batch processing 
 
 ## Documentation
 
-Comprehensive documentation is available in the [_Tutorial_](https://miyeonyeon.github.io/bioc-vignettes/RNAshapeQC_intro.html) and the [_User Manual_](https://bookdown.org/sqr_yeon/RNAshapeQCdocs/).
+Comprehensive documentation is available in the [_Tutorial_](https://miyeonyeon.github.io/bioc-vignettes/RNAshapeQC_intro.html) and the [_User Manual_](https://miyeonyeon.github.io/bioc-vignettes/RNAshapeQCdocs_book/).
 
 
 ## Installation
