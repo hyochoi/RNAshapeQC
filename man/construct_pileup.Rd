@@ -63,25 +63,6 @@ a pileup matrix, regions, and ranges of genomic positions
 Construct a per-gene pileup from BAM files (for single-study or multi-study)
 }
 \examples{
-\dontrun{
-res <- construct_pileup(
-  Gene          = "KEAP1",
-  studylist     = c("LUAD", "HNSC"),
-  regionsFile   = "/path/to/TCGA.hg19.gene.regions.txt",
-  regionsFormat = "gencode.regions",
-  geneCol       = 1,
-  regionsCol    = 2,
-  bamFilesList  = list(
-    LUAD = luad_bam_paths,
-    HNSC = hnsc_bam_paths
-  ),
-  caseIDList    = list(
-    LUAD = luad_case_ids,
-    HNSC = hnsc_case_ids
-  ),
-  max_depth       = 100000,
-  strand.specific = FALSE,
-  nCores          = 10
-)
-}
+## API illustration only
+invisible(NULL)
 }

@@ -14,6 +14,28 @@ compute_MCD(pileupData, sampleInfo, cases = NULL)
 \item{cases}{optional character vector specifying a subset of samples.
 used for handling missing coverage.}
 }
+\value{
+a numeric vector of mean coverage depth, one value per sample.
+}
 \description{
 Core helper to compute a mean coverage depth
+}
+\examples{
+## API illustration only
+## Exon-only pileup matrix (rows: exon positions, columns: samples)
+## Typically obtained via get_pileupExon()
+pileupData <- matrix(
+  c(10, 12, 8,  9,
+    5,  6,  4,  5),
+  nrow=2,
+  byrow=TRUE
+)
+colnames(pileupData) <- c("S1", "S2", "S3", "S4")
+
+sampleInfo <- data.frame(SampleID=colnames(pileupData))
+
+compute_MCD(
+  pileupData = pileupData,
+  sampleInfo = sampleInfo
+)
 }

@@ -25,6 +25,9 @@ A list with 6 components:
 \usage{
 data("TOY_mrna")
 }
+\value{
+A named list containing synthetic mRNA-seq-like inputs for RNAshapeQC.
+}
 \description{
 A small synthetic dataset mimicking mRNA-seq coverage-based quality control
 (QC) inputs. It is used in the vignette to demonstrate degradation-based

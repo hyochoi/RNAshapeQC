@@ -7,7 +7,7 @@
 #' @references Choi, H.Y., Jo, H., Zhao, X. et al. SCISSOR: a framework for identifying structural changes in RNA transcripts. Nat Commun 12, 286 (2021).
 #' @noRd
 
-norm_pileup.spl = function(pileup, rnum=100, method=1) {
+norm_pileup.spl <- function(pileup, rnum=100, method=1) {
 
   row <- c(1:length(pileup))
   depthmat <- cbind(row, pileup)
@@ -47,7 +47,7 @@ norm_pileup.spl = function(pileup, rnum=100, method=1) {
 #' @references Choi, H.Y., Jo, H., Zhao, X. et al. SCISSOR: a framework for identifying structural changes in RNA transcripts. Nat Commun 12, 286 (2021).
 #' @noRd
 
-norm_pileup.gene = function(pileupData, rnum=100, method=1, nCores=32) {
+norm_pileup.gene <- function(pileupData, rnum=100, method=1, nCores=32) {
 
   if (!(method %in% c(1, 2))) {
     stop(method, " is not an option for method.")
@@ -73,7 +73,7 @@ norm_pileup.gene = function(pileupData, rnum=100, method=1, nCores=32) {
 #' @references Choi, H.Y., Jo, H., Zhao, X. et al. SCISSOR: a framework for identifying structural changes in RNA transcripts. Nat Commun 12, 286 (2021).
 #' @noRd
 
-norm_pileup.list = function(pileupPath, geneNames=NULL, rnum=100, method=1, cases=NULL) {
+norm_pileup.list <- function(pileupPath, geneNames=NULL, rnum=100, method=1, cases=NULL) {
 
   if (is.null(geneNames)) {
     geneNames = paste0("Gene_", c(1:length(pileupPath)))
@@ -120,7 +120,7 @@ norm_pileup.list = function(pileupPath, geneNames=NULL, rnum=100, method=1, case
 #' @references Choi, H.Y., Jo, H., Zhao, X. et al. SCISSOR: a framework for identifying structural changes in RNA transcripts. Nat Commun 12, 286 (2021).
 #' @noRd
 
-scale_pileup.list = function(pileupPath, geneNames=NULL, rnum=100, method=1, scale=TRUE, cases=NULL) {
+scale_pileup.list <- function(pileupPath, geneNames=NULL, rnum=100, method=1, scale=TRUE, cases=NULL) {
 
   # Gene length normalization
   normlist = norm_pileup.list(pileupPath, geneNames, rnum=rnum, method=method, cases=cases)
@@ -155,7 +155,7 @@ scale_pileup.list = function(pileupPath, geneNames=NULL, rnum=100, method=1, sca
 #' @importFrom stats sd mad quantile
 #' @noRd
 
-get_metrics = function(pileupPath, geneNames=NULL, rnum=100, method=1, scale=TRUE, margin) {
+get_metrics <- function(pileupPath, geneNames=NULL, rnum=100, method=1, scale=TRUE, margin) {
 
   scale.log.normlist = scale_pileup.list(pileupPath, geneNames, rnum=rnum, method=method, scale=TRUE)
   mar <- list(2, 3, 2:3)

@@ -2,7 +2,7 @@
 #'
 #' @noRd
 
-.build_regionsStr = function(Gene, regionsFile, regionsFormat=c("auto", "SCISSOR_gaf", "gencode.regions"), geneCol=1, regionsCol=NULL) {
+.build_regionsStr <- function(Gene, regionsFile, regionsFormat=c("auto", "SCISSOR_gaf", "gencode.regions"), geneCol=1, regionsCol=NULL) {
 
   regionsFormat <- match.arg(regionsFormat)
 
@@ -60,7 +60,7 @@
 #'
 #' @noRd
 
-.construct_pileupStudy = function(Gene, regions, Ranges, BAMfiles, caseIDs, max_depth=100000, strand.specific=FALSE, nCores=10) {
+.construct_pileupStudy <- function(Gene, regions, Ranges, BAMfiles, caseIDs, max_depth=100000, strand.specific=FALSE, nCores=10) {
 
   if (length(BAMfiles)!=length(caseIDs)) {
     stop("`BAMfiles` and `caseIDs` must have the same length.")
@@ -203,30 +203,11 @@
 #' @param outFile a directory with a file name to save outputs. Default is NULL.
 #' @return a pileup matrix, regions, and ranges of genomic positions
 #' @examples
-#' \dontrun{
-#' res <- construct_pileup(
-#'   Gene          = "KEAP1",
-#'   studylist     = c("LUAD", "HNSC"),
-#'   regionsFile   = "/path/to/TCGA.hg19.gene.regions.txt",
-#'   regionsFormat = "gencode.regions",
-#'   geneCol       = 1,
-#'   regionsCol    = 2,
-#'   bamFilesList  = list(
-#'     LUAD = luad_bam_paths,
-#'     HNSC = hnsc_bam_paths
-#'   ),
-#'   caseIDList    = list(
-#'     LUAD = luad_case_ids,
-#'     HNSC = hnsc_case_ids
-#'   ),
-#'   max_depth       = 100000,
-#'   strand.specific = FALSE,
-#'   nCores          = 10
-#' )
-#' }
+#' ## API illustration only
+#' invisible(NULL)
 #' @export
 
-construct_pileup = function(
+construct_pileup <- function(
     Gene,
     studylist,
     regionsFile,
@@ -339,10 +320,11 @@ construct_pileup = function(
 #' @param pileupPath file paths of coverage pileupData including .RData file names
 #' @param cases a vector of specific samples among all samples in pileup. If NULL, all samples are selected. Default is NULL.
 #' @param study a character of study abbreviation in the pileupList. Default is NULL.
+#' @return a numeric matrix of exon-only coverage (rows: exon positions, columns: samples).
 #' @references Choi, H.Y., Jo, H., Zhao, X. et al. SCISSOR: a framework for identifying structural changes in RNA transcripts. Nat Commun 12, 286 (2021).
 #' @export
 
-.build_pileupExon = function(pileupPath, cases=NULL, study=NULL) {
+.build_pileupExon <- function(pileupPath, cases=NULL, study=NULL) {
 
   if (!file.exists(pileupPath)) {
     warning("File does not exist: ", pileupPath)
@@ -402,7 +384,7 @@ construct_pileup = function(
 #' @return a focused pileup is a the number of exon locations x the number of samples matrix for the g-th gene.
 #' @export
 
-get_pileupExon = function(g, pileupPath, cases=NULL) {
+get_pileupExon <- function(g, pileupPath, cases=NULL) {
   pileupData <- .build_pileupExon(
     pileupPath = pileupPath[g],
     cases      = cases,
@@ -421,7 +403,7 @@ get_pileupExon = function(g, pileupPath, cases=NULL) {
 #' @return a focused pileup is a the number of exon locations x the number of samples matrix for the g-th gene or Gene.
 #' @noRd
 
-extract_pileupExon = function(Gene, pileupPath, cases=NULL, Study=NULL) {
+extract_pileupExon <- function(Gene, pileupPath, cases=NULL, Study=NULL) {
   pileupData <- .build_pileupExon(
     pileupPath = pileupPath,
     cases      = cases,
@@ -438,9 +420,15 @@ extract_pileupExon = function(Gene, pileupPath, cases=NULL, Study=NULL) {
 #' @param thr threshold. Default is 5.
 #' @param pct percent. Default is 40.
 #' @return a vector of filtered gene names
+#' @examples
+#' data("TOY_mrna")
+#' filter_lowExpGenes(
+#'   genelist = TOY_mrna$genes,
+#'   TPM      = TOY_mrna$TPM
+#' )
 #' @export
 
-filter_lowExpGenes = function(genelist, TPM, thr=5, pct=40) {
+filter_lowExpGenes <- function(genelist, TPM, thr=5, pct=40) {
 
   TPM2 <- stats::na.omit(TPM[match(genelist, rownames(TPM)), ])
   rows_to_keep <- apply(TPM2, 1, function(row) {mean(row<thr) < pct/100})

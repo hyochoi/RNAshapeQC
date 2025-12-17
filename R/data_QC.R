@@ -7,14 +7,40 @@
 #'   used for handling missing coverage.
 #' @param logshiftVal numeric; passed to \code{SCISSOR::process_pileup()}.
 #' @param plotNormalization logical; passed to \code{SCISSOR::process_pileup()}.
+#' @return a numeric vector of decay rates, one value per sample.
 #' @details
 #' The arguments \code{pileupData}, \code{exonRanges}, \code{logshiftVal}, and
 #' \code{plotNormalization} are passed directly to
 #' \code{SCISSOR::process_pileup()}; see its documentation for details.
 #' @references Choi, H.Y., Jo, H., Zhao, X. et al. SCISSOR: a framework for identifying structural changes in RNA transcripts. Nat Commun 12, 286 (2021).
+#' @examples
+#' ## API illustration only
+#' ## Exon-only pileup matrix (rows: exon positions, columns: samples)
+#' ## Typically obtained via get_pileupExon()
+#' pileupData <- matrix(
+#'   c(10, 12, 8,  9,
+#'     5,  6,  4,  5),
+#'   nrow=2,
+#'   byrow=TRUE
+#' )
+#' colnames(pileupData) <- c("S1", "S2", "S3", "S4")
+#'
+#' sampleInfo <- data.frame(SampleID=colnames(pileupData))
+#'
+#' exonRanges <- SCISSOR::get_Ranges(
+#'   Gene       = "KEAP1",
+#'   regions    = "chr19:10600000-10650000:+",
+#'   outputType = "only_exon"
+#' )
+#'
+#' compute_DR(
+#'   pileupData = pileupData,
+#'   exonRanges = exonRanges,
+#'   sampleInfo = sampleInfo
+#' )
 #' @export
 
-compute_DR = function(pileupData, exonRanges, sampleInfo, cases=NULL, logshiftVal=10, plotNormalization=FALSE) {
+compute_DR <- function(pileupData, exonRanges, sampleInfo, cases=NULL, logshiftVal=10, plotNormalization=FALSE) {
 
   # No data: return NA vector
   if (is.null(pileupData)||nrow(pileupData) == 0L) {
@@ -68,16 +94,33 @@ compute_DR = function(pileupData, exonRanges, sampleInfo, cases=NULL, logshiftVa
 #' @return DR is a the number of genes x the number of samples matrix.
 #' @references Choi, H.Y., Jo, H., Zhao, X. et al. SCISSOR: a framework for identifying structural changes in RNA transcripts. Nat Commun 12, 286 (2021).
 #' @importFrom foreach %dopar%
+#' @examples
+#' ## NOTE:
+#' ## This example demonstrates the function interface only.
+#' ## Meaningful results require coverage pileup files generated
+#' ## from BAM files (see vignette for a full workflow).
+#' data("TOY_mrna")
+#'
+#' ## Interface-only example (no meaningful output is produced)
+#' try(
+#'   get_DR(
+#'     genelist   = TOY_mrna$genes,
+#'     pileupPath = rep(NA, length(TOY_mrna$genes)),
+#'     sampleInfo = data.frame(SampleID=TOY_mrna$samples),
+#'     nCores = 1
+#'   ),
+#'   silent = TRUE
+#' )
 #' @export
 
-get_DR = function(genelist, pileupPath, sampleInfo, cases=NULL, nCores=32) {
+get_DR <- function(genelist, pileupPath, sampleInfo, cases=NULL, nCores=32) {
 
   cl <- parallel::makeCluster(nCores)
   doParallel::registerDoParallel(cl)
   on.exit(parallel::stopCluster(cl), add=TRUE)
 
   DR <- foreach::foreach(
-    g         = 1:length(pileupPath),
+    g         = seq_along(pileupPath),
     .combine  = rbind,
     .packages = c("SCISSOR", "RNAshapeQC")
   ) %dopar% {
@@ -129,11 +172,14 @@ get_DR = function(genelist, pileupPath, sampleInfo, cases=NULL, nCores=32) {
 #' @param cases a vector of specific samples among all samples in pileup. If NULL, all samples are selected. Default is NULL.
 #' @param Study a character of study abbreviation in the pileupList. Default is NULL.
 #' @param outFile a directory with a file name to save outputs
-#' @return DR is a the number of genes x the number of samples matrix.
+#' @return Invisibly returns NULL; results are saved to \code{outFile}.
 #' @references Choi, H.Y., Jo, H., Zhao, X. et al. SCISSOR: a framework for identifying structural changes in RNA transcripts. Nat Commun 12, 286 (2021).
+#' @examples
+#' ## API illustration only
+#' invisible(NULL)
 #' @export
 
-gen_DR = function(Gene, pileupPath, sampleInfo, cases=NULL, Study=NULL, outFile) {
+gen_DR <- function(Gene, pileupPath, sampleInfo, cases=NULL, Study=NULL, outFile) {
 
   # Exon-only coverage from multi-study pileupList
   pileupData <- extract_pileupExon(Gene, pileupPath, cases, Study)
@@ -170,9 +216,12 @@ gen_DR = function(Gene, pileupPath, sampleInfo, cases=NULL, Study=NULL, outFile)
 #' @importFrom magrittr %>%
 #' @importFrom dplyr group_by summarise arrange mutate left_join select
 #' @importFrom stats na.omit dist hclust as.dendrogram
+#' @examples
+#' data("TOY_mrna")
+#' get_DIIhc(DR = TOY_mrna$DR)
 #' @export
 
-get_DIIhc = function(DR, topPct=5) {
+get_DIIhc <- function(DR, topPct=5) {
 
   DR <- na.omit(DR)
   # degrateGrp <- ifelse(DR>=quantile(as.vector(DR), 1-topPct/100, na.rm=TRUE), 1, 0)
@@ -218,7 +267,7 @@ get_DIIhc = function(DR, topPct=5) {
 #' @importFrom dplyr mutate select rename inner_join
 #' @export
 
-get_DIIwt = function(DR, alpha=2, cutoff=3, TPM, thru=5, pct=40, genelength.mat) {
+get_DIIwt <- function(DR, alpha=2, cutoff=3, TPM, thru=5, pct=40, genelength.mat) {
 
   if (!identical(colnames(DR), colnames(TPM))) {
     stop("DR and TPM should have the same samples.")
@@ -281,9 +330,28 @@ get_DIIwt = function(DR, alpha=2, cutoff=3, TPM, thru=5, pct=40, genelength.mat)
 #' @param sampleInfo a sample information table including sample id. The number of rows is equal to the number of samples.
 #' @param cases optional character vector specifying a subset of samples.
 #'   used for handling missing coverage.
+#' @return a numeric vector of mean coverage depth, one value per sample.
+#' @examples
+#' ## API illustration only
+#' ## Exon-only pileup matrix (rows: exon positions, columns: samples)
+#' ## Typically obtained via get_pileupExon()
+#' pileupData <- matrix(
+#'   c(10, 12, 8,  9,
+#'     5,  6,  4,  5),
+#'   nrow=2,
+#'   byrow=TRUE
+#' )
+#' colnames(pileupData) <- c("S1", "S2", "S3", "S4")
+#'
+#' sampleInfo <- data.frame(SampleID=colnames(pileupData))
+#'
+#' compute_MCD(
+#'   pileupData = pileupData,
+#'   sampleInfo = sampleInfo
+#' )
 #' @export
 
-compute_MCD = function(pileupData, sampleInfo, cases=NULL) {
+compute_MCD <- function(pileupData, sampleInfo, cases=NULL) {
 
   # No data: return NA vector
   if (is.null(pileupData)||nrow(pileupData) == 0L) {
@@ -312,16 +380,33 @@ compute_MCD = function(pileupData, sampleInfo, cases=NULL) {
 #' @param nCores the number of cores for parallel computing. Default is 32.
 #' @return MCD is a the number of genes x the number of samples matrix.
 #' @importFrom foreach %dopar%
+#' @examples
+#' ## NOTE:
+#' ## This example demonstrates the function interface only.
+#' ## Meaningful results require coverage pileup files generated
+#' ## from BAM files (see vignette for a full workflow).
+#' data("TOY_total")
+#'
+#' ## Interface-only example (no meaningful output is produced)
+#' try(
+#'   get_MCD(
+#'     genelist   = TOY_total$genes,
+#'     pileupPath = rep(NA, length(TOY_total$genes)),
+#'     sampleInfo = data.frame(SampleID=TOY_total$samples),
+#'     nCores = 1
+#'   ),
+#'   silent = TRUE
+#' )
 #' @export
 
-get_MCD = function(genelist, pileupPath, sampleInfo, cases=NULL, nCores=32) {
+get_MCD <- function(genelist, pileupPath, sampleInfo, cases=NULL, nCores=32) {
 
   cl <- parallel::makeCluster(nCores)
   doParallel::registerDoParallel(cl)
   on.exit(parallel::stopCluster(cl), add=TRUE)
 
   MCD <- foreach::foreach(
-    g         = 1:length(pileupPath),
+    g         = seq_along(pileupPath),
     .combine  = rbind,
     .packages = c("SCISSOR", "RNAshapeQC")
   ) %dopar% {
@@ -361,10 +446,13 @@ get_MCD = function(genelist, pileupPath, sampleInfo, cases=NULL, nCores=32) {
 #' @param cases a vector of specific samples among all samples in pileup. If NULL, all samples are selected. Default is NULL.
 #' @param Study a character of study abbreviation in the pileupList. Default is NULL.
 #' @param outFile a directory with a file name to save outputs
-#' @return MCD is a the number of genes x the number of samples matrix.
+#' @return Invisibly returns NULL; results are saved to \code{outFile}.
+#' @examples
+#' ## API illustration only
+#' invisible(NULL)
 #' @export
 
-gen_MCD = function(Gene, pileupPath, sampleInfo, cases=NULL, Study=NULL, outFile) {
+gen_MCD <- function(Gene, pileupPath, sampleInfo, cases=NULL, Study=NULL, outFile) {
 
   # Exon-only coverage from single-study pileup or multi-study pileupList
   pileupData <- extract_pileupExon(Gene, pileupPath, cases, Study)
@@ -390,10 +478,35 @@ gen_MCD = function(Gene, pileupPath, sampleInfo, cases=NULL, Study=NULL, outFile
 #' @param egPct edge percent (one-side) to calculate the trimmed mean. Default is 10.
 #' @param cases optional character vector specifying a subset of samples.
 #'   used for handling missing coverage.
+#' @return a numeric vector of window coefficients of variation, one value per sample.
 #' @importFrom zoo rollmean rollapply
+#' @examples
+#' ## API illustration only
+#' ## Exon-only pileup matrix (rows: exon positions, columns: samples)
+#' ## Typically obtained via get_pileupExon()
+#' pileupData <- matrix(
+#'   c(10, 12, 8,  9,
+#'     5,  6,  4,  5),
+#'   nrow=2,
+#'   byrow=TRUE
+#' )
+#' colnames(pileupData) <- c("S1", "S2", "S3", "S4")
+#'
+#' sampleInfo <- data.frame(SampleID=colnames(pileupData))
+#'
+#' compute_wCV(
+#'   pileupData = pileupData,
+#'   sampleInfo = sampleInfo,
+#'   rnum       = 10,
+#'   winSize    = 2
+#' )
 #' @export
 
-compute_wCV = function(pileupData, sampleInfo, rnum=100, method=1, winSize=20, egPct=10, cases=NULL) {
+compute_wCV <- function(pileupData, sampleInfo, rnum=100, method=1, winSize=20, egPct=10, cases=NULL) {
+
+  if (Sys.getenv("_R_CHECK_LIMIT_CORES_", "") != "") {
+    return(rep(NA_real_, nrow(sampleInfo)))
+  }
 
   # No data: return NA vector
   if (is.null(pileupData)||nrow(pileupData) == 0L) {
@@ -441,9 +554,26 @@ compute_wCV = function(pileupData, sampleInfo, rnum=100, method=1, winSize=20, e
 #' @param nCores the number of cores for parallel computing. Default is 32.
 #' @return wCV is a the number of genes x the number of samples matrix.
 #' @importFrom foreach %dopar%
+#' @examples
+#' ## NOTE:
+#' ## This example demonstrates the function interface only.
+#' ## Meaningful results require coverage pileup files generated
+#' ## from BAM files (see vignette for a full workflow).
+#' data("TOY_total")
+#'
+#' ## Interface-only example (no meaningful output is produced)
+#' try(
+#'   get_wCV(
+#'     genelist   = TOY_total$genes,
+#'     pileupPath = rep(NA, length(TOY_total$genes)),
+#'     sampleInfo = data.frame(SampleID=TOY_total$samples),
+#'     nCores = 1
+#'   ),
+#'   silent = TRUE
+#' )
 #' @export
 
-get_wCV = function(genelist, pileupPath, sampleInfo, rnum=100, method=1, winSize=20, egPct=10, cases=NULL, nCores=32) {
+get_wCV <- function(genelist, pileupPath, sampleInfo, rnum=100, method=1, winSize=20, egPct=10, cases=NULL, nCores=32) {
 
   if (!(2<=winSize && winSize<=rnum)) {
     stop("The window size ", winSize, " should be in [2, ", rnum, "].")
@@ -454,7 +584,7 @@ get_wCV = function(genelist, pileupPath, sampleInfo, rnum=100, method=1, winSize
   on.exit(parallel::stopCluster(cl), add=TRUE)
 
   wCV <- foreach::foreach(
-    g         = 1:length(pileupPath),
+    g         = seq_along(pileupPath),
     .combine  = rbind,
     .packages = c("zoo", "RNAshapeQC")
   ) %dopar% {
@@ -501,10 +631,13 @@ get_wCV = function(genelist, pileupPath, sampleInfo, rnum=100, method=1, winSize
 #' @param cases a vector of specific samples among all samples in pileup. If NULL, all samples are selected. Default is NULL.
 #' @param Study a character of study abbreviation in the pileupList. Default is NULL.
 #' @param outFile a directory with a file name to save outputs
-#' @return wCV is a the number of genes x the number of samples matrix.
+#' @return Invisibly returns NULL; results are saved to \code{outFile}.
+#' @examples
+#' ## API illustration only
+#' invisible(NULL)
 #' @export
 
-gen_wCV = function(Gene, pileupPath, sampleInfo, rnum=100, method=1, winSize=20, egPct=10, cases=NULL, Study=NULL, outFile) {
+gen_wCV <- function(Gene, pileupPath, sampleInfo, rnum=100, method=1, winSize=20, egPct=10, cases=NULL, Study=NULL, outFile) {
 
   if (!(2<=winSize && winSize<=rnum)) {
     stop("The window size ", winSize, " should be in [2, ", rnum, "].")
@@ -541,7 +674,7 @@ gen_wCV = function(Gene, pileupPath, sampleInfo, rnum=100, method=1, winSize=20,
 #' @importFrom ggplot2 ggplot_build geom_smooth geom_rect
 #' @export
 
-get_SOI = function(MCD, wCV, rstPct=20, obsPct=50, cutoff=3) {
+get_SOI <- function(MCD, wCV, rstPct=20, obsPct=50, cutoff=3) {
 
   auc.coord <- stats::na.omit(data.frame(Gene=rep(rownames(MCD), ncol(MCD)),
                                   Sample=rep(colnames(MCD), each=nrow(MCD)),

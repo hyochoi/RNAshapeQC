@@ -17,6 +17,12 @@ the object
 \description{
 Extract an object from .RData
 }
+\examples{
+tmp <- tempfile(fileext=".RData")
+x <- 1
+save(x, file=tmp)
+extract_RData(tmp, "x")
+}
 \references{
 https://stackoverflow.com/questions/65964064/programmatically-extract-an-object-from-collection-of-rdata-files
 }

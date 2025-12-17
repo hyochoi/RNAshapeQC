@@ -27,6 +27,9 @@ used for handling missing coverage.}
 
 \item{plotNormalization}{logical; passed to \code{SCISSOR::process_pileup()}.}
 }
+\value{
+a numeric vector of decay rates, one value per sample.
+}
 \description{
 Core helper to compute decay rate
 }
@@ -34,6 +37,32 @@ Core helper to compute decay rate
 The arguments \code{pileupData}, \code{exonRanges}, \code{logshiftVal}, and
 \code{plotNormalization} are passed directly to
 \code{SCISSOR::process_pileup()}; see its documentation for details.
+}
+\examples{
+## API illustration only
+## Exon-only pileup matrix (rows: exon positions, columns: samples)
+## Typically obtained via get_pileupExon()
+pileupData <- matrix(
+  c(10, 12, 8,  9,
+    5,  6,  4,  5),
+  nrow=2,
+  byrow=TRUE
+)
+colnames(pileupData) <- c("S1", "S2", "S3", "S4")
+
+sampleInfo <- data.frame(SampleID=colnames(pileupData))
+
+exonRanges <- SCISSOR::get_Ranges(
+  Gene       = "KEAP1",
+  regions    = "chr19:10600000-10650000:+",
+  outputType = "only_exon"
+)
+
+compute_DR(
+  pileupData = pileupData,
+  exonRanges = exonRanges,
+  sampleInfo = sampleInfo
+)
 }
 \references{
 Choi, H.Y., Jo, H., Zhao, X. et al. SCISSOR: a framework for identifying structural changes in RNA transcripts. Nat Commun 12, 286 (2021).

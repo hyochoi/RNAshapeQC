@@ -21,3 +21,10 @@ a vector of filtered gene names
 \description{
 Filter low expressed genes
 }
+\examples{
+data("TOY_mrna")
+filter_lowExpGenes(
+  genelist = TOY_mrna$genes,
+  TPM      = TOY_mrna$TPM
+)
+}

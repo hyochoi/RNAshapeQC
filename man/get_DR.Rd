@@ -23,6 +23,24 @@ DR is a the number of genes x the number of samples matrix.
 \description{
 Get a decay rate for genes and samples (for a genelist)
 }
+\examples{
+## NOTE:
+## This example demonstrates the function interface only.
+## Meaningful results require coverage pileup files generated
+## from BAM files (see vignette for a full workflow).
+data("TOY_mrna")
+
+## Interface-only example (no meaningful output is produced)
+try(
+  get_DR(
+    genelist   = TOY_mrna$genes,
+    pileupPath = rep(NA, length(TOY_mrna$genes)),
+    sampleInfo = data.frame(SampleID=TOY_mrna$samples),
+    nCores = 1
+  ),
+  silent = TRUE
+)
+}
 \references{
 Choi, H.Y., Jo, H., Zhao, X. et al. SCISSOR: a framework for identifying structural changes in RNA transcripts. Nat Commun 12, 286 (2021).
 }

@@ -24,6 +24,9 @@ A list with 5 components:
 \usage{
 data("TOY_total")
 }
+\value{
+A named list containing synthetic total RNA-seq-like inputs for RNAshapeQC.
+}
 \description{
 A small synthetic dataset mimicking total RNA-seq coverage-based quality
 control (QC) inputs. It is used in the vignette to demonstrate coverage-shape

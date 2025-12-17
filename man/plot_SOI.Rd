@@ -19,6 +19,19 @@ figures for the distribution of SOI by PD; and the relation of wCV and MCD.
 \description{
 Plot suboptimal/optimal index outputs
 }
+\examples{
+data("TOY_total")
+
+res <- get_SOI(
+  MCD = TOY_total$MCD,
+  wCV = TOY_total$wCV
+)
+
+plot_SOI(
+  SOIresult = res,
+  outFile   = tempfile(fileext=".png")
+)
+}
 \references{
 https://jtr13.github.io/cc21fall2/raincloud-plot-101-density-plot-or-boxplotwhy-not-do-both.html
 }

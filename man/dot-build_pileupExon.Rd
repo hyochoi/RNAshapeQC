@@ -13,6 +13,9 @@
 
 \item{study}{a character of study abbreviation in the pileupList. Default is NULL.}
 }
+\value{
+a numeric matrix of exon-only coverage (rows: exon positions, columns: samples).
+}
 \description{
 Core helper to build exon-only pileup
 }

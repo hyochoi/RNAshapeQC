@@ -21,6 +21,8 @@
 #'   \item{genelength.mat}{A one-column numeric matrix of gene lengths (bp),
 #'     with row names matching the row names of \code{DR}.}
 #' }
+#' @return
+#' A named list containing synthetic mRNA-seq-like inputs for RNAshapeQC.
 #'
 #' @details
 #' All values are synthetic and were generated solely for demonstration and
@@ -59,6 +61,8 @@
 #'   \item{protocol}{A single character string indicating the protocol used,
 #'     here \code{"total RNA-seq"}.}
 #' }
+#' @return
+#' A named list containing synthetic total RNA-seq-like inputs for RNAshapeQC.
 #'
 #' @details
 #' All values are synthetic and were generated solely for demonstration and

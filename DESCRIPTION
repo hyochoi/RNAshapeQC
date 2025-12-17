@@ -44,11 +44,9 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 RoxygenNote: 7.3.2
 Depends:
-    R (>= 4.3)
+    R (>= 4.4)
 Imports:
     SCISSOR,
-    stats,
-    utils,
     GenomicRanges,
     IRanges,
     Rsamtools,
@@ -61,17 +59,15 @@ Imports:
     ComplexHeatmap,
     circlize,
     colortools,
-    grid,
-    grDevices,
     dendextend,
     DescTools,
     ggpubr
 Suggests:
     doParallel,
-    parallel,
     knitr,
     rmarkdown,
     BiocStyle,
+    BiocParallel,
     testthat (>= 3.0.0),
     PupillometryR,
     matrixStats,
@@ -83,9 +79,7 @@ biocViews:
     RNASeq,
     QualityControl,
     Transcriptomics,
-    Sequencing,
-    GenomicRanges,
-    Coverage
+    Sequencing
 URL: https://github.com/hyochoi/RNAshapeQC
 BugReports: https://github.com/hyochoi/RNAshapeQC/issues
 VignetteBuilder: knitr

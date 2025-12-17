@@ -13,9 +13,24 @@
 #' @importFrom grDevices colorRampPalette
 #' @importFrom ggplot2 ggplot aes geom_line labs
 #' @importFrom ggplot2 scale_colour_gradientn theme element_rect element_text
+#' @examples
+#' ## Interface-only example
+#' try(
+#'   plot_GBC(
+#'     pileupPath = NA,
+#'     geneNames  = "GENE1",
+#'     sampleInfo = data.frame(
+#'       SampleID = c("S1", "S2"),
+#'       CODING_BASES = c(1, 1),
+#'       INTRONIC_BASES = c(1, 1)
+#'     ),
+#'     plot = FALSE
+#'   ),
+#'   silent = TRUE
+#' )
 #' @export
 
-plot_GBC = function(pileupPath, geneNames, rnum=100, method=1, scale=TRUE, stat=2, plot=TRUE, sampleInfo) {
+plot_GBC <- function(pileupPath, geneNames, rnum=100, method=1, scale=TRUE, stat=2, plot=TRUE, sampleInfo) {
 
   scale.log.normlist = scale_pileup.list(pileupPath, geneNames, rnum=rnum, method=method, scale=scale)
   scale.arr <- simplify2array(scale.log.normlist)
@@ -74,9 +89,35 @@ plot_GBC = function(pileupPath, geneNames, rnum=100, method=1, scale=TRUE, stat=
 #' @param auc.vec a vector with SOI per sample
 #' @return a matrix and a plot, or a matrix for the gene body coverage where plot is TRUE or FALSE, respectively.
 #' @importFrom dplyr filter select inner_join
+#' @examples
+#' ## Interface-only example
+#' GBCresult <- list(
+#'   GBP = data.frame(
+#'     region = 1:2,
+#'     sample = c("S1", "S2"),
+#'     scale.geom = c(1, 1),
+#'     RatioIntron = c(1, 1)
+#'   )
+#' )
+#'
+#' auc.vec <- data.frame(
+#'   Sample = c("S1", "S2"),
+#'   PD = c(0, 0),
+#'   SOI = c("Optimal", "Optimal")
+#' )
+#'
+#' try(
+#'   plot_GBCos(
+#'     sampleInfo = data.frame(SampleID=c("S1","S2")),
+#'     GBCresult  = GBCresult,
+#'     auc.vec    = auc.vec,
+#'     plot       = FALSE
+#'   ),
+#'   silent = TRUE
+#' )
 #' @export
 
-plot_GBCos = function(stat=2, plot=TRUE, sampleInfo, GBCresult, auc.vec) {
+plot_GBCos <- function(stat=2, plot=TRUE, sampleInfo, GBCresult, auc.vec) {
 
   # Update with optimal samples and PD
   GBP <- GBCresult$GBP %>%
@@ -139,9 +180,26 @@ plot_GBCos = function(stat=2, plot=TRUE, sampleInfo, GBCresult, auc.vec) {
 #' @importFrom grid grid.grabExpr pushViewport viewport unit gpar
 #' @importFrom grDevices png dev.off
 #' @importFrom ggplot2 margin
+#' @examples
+#' data("TOY_mrna")
+#'
+#' res <- get_DIIwt(
+#'   DR             = TOY_mrna$DR,
+#'   TPM            = TOY_mrna$TPM,
+#'   genelength.mat = TOY_mrna$genelength.mat
+#' )
+#'
+#' try(
+#'   plot_DIIwt(
+#'     DR        = TOY_mrna$DR,
+#'     DIIresult = res,
+#'     outFile   = tempfile(fileext=".png")
+#'   ),
+#'   silent = TRUE
+#' )
 #' @export
 
-plot_DIIwt = function(DR, DIIresult, cutoff=3, outFile=NULL) {
+plot_DIIwt <- function(DR, DIIresult, cutoff=3, outFile=NULL) {
 
   DR.mat <- DR
   ds.vec <- DIIresult$ds.vec
@@ -351,9 +409,21 @@ plot_DIIwt = function(DR, DIIresult, cutoff=3, outFile=NULL) {
 #' @importFrom ggplot2 theme element_rect element_text coord_flip
 #' @importFrom ggplot2 geom_line scale_color_manual xlab ylab coord_cartesian
 #' @importFrom ggplot2 margin
+#' @examples
+#' data("TOY_total")
+#'
+#' res <- get_SOI(
+#'   MCD = TOY_total$MCD,
+#'   wCV = TOY_total$wCV
+#' )
+#'
+#' plot_SOI(
+#'   SOIresult = res,
+#'   outFile   = tempfile(fileext=".png")
+#' )
 #' @export
 
-plot_SOI = function(SOIresult, cutoff=3, outFile=NULL) {
+plot_SOI <- function(SOIresult, cutoff=3, outFile=NULL) {
 
   auc.vec2 <- SOIresult$auc.vec[, c("AUC", "PD")]
   auc.coord <- SOIresult$auc.coord

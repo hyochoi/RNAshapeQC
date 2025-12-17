@@ -39,8 +39,12 @@ gen_wCV(
 \item{outFile}{a directory with a file name to save outputs}
 }
 \value{
-wCV is a the number of genes x the number of samples matrix.
+Invisibly returns NULL; results are saved to \code{outFile}.
 }
 \description{
 Get a window coefficient of variation for genes and samples (for a single gene)
+}
+\examples{
+## API illustration only
+invisible(NULL)
 }

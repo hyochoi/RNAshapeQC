@@ -5,7 +5,7 @@
 #' @references https://www.geeksforgeeks.org/how-to-convert-dataframe-column-from-character-to-numeric-in-r/#
 #' @noRd
 
-convert_Chr2Numcol = function(df, colnums) {
+convert_Chr2Numcol <- function(df, colnums) {
   vec <- c(colnums)
   df[ , vec] <- apply(df[ , vec,drop=FALSE], 2, function(x) as.numeric(as.character(x)))
 
@@ -22,7 +22,7 @@ convert_Chr2Numcol = function(df, colnums) {
 #' @references https://stats.stackexchange.com/questions/30858/how-to-calculate-cumulative-distribution-in-r
 #' @noRd
 
-convert_Cont2eCDF = function(data, name, margin){
+convert_Cont2eCDF <- function(data, name, margin){
 
   # Create ecdf function
   fun_ecdf <- stats::ecdf(data)
@@ -56,7 +56,7 @@ convert_Cont2eCDF = function(data, name, margin){
 #' @references https://dcl-wrangle.stanford.edu/pivot-basic.html
 #' @noRd
 
-convert_pivot.longer = function(mat, rcenames) {
+convert_pivot.longer <- function(mat, rcenames) {
 
   row <- rownames(mat)
   mat1 <- data.frame(row, mat)
@@ -85,19 +85,11 @@ convert_pivot.longer = function(mat, rcenames) {
 #' @param nCores the number of cores for parallel computing. Default is 32.
 #' @return a gene x sample matrix
 #' @examples
-#' \dontrun{
-#' DR.mat <- combine_vecObj(
-#'   filePath = paste0("path/to/", genelist, "/", Study, "_", genelist, "_degradation.RData"),
-#'   objName  = "allSampleDegRate",
-#'   margin   = 1,
-#'   rowNames = genelist,
-#'   colNames = cases,
-#'   nCores   = 32
-#' )
-#' }
+#' ## API illustration only
+#' invisible(NULL)
 #' @export
 
-combine_vecObj = function(filePath, objName=NULL, header=NULL, skip=NULL, txtCol=NULL, margin, rowNames, colNames, nCores=32) {
+combine_vecObj <- function(filePath, objName=NULL, header=NULL, skip=NULL, txtCol=NULL, margin, rowNames, colNames, nCores=32) {
 
   if (!(margin %in% c(1, 2))) {
     stop(margin, " is not an option for margin.")
@@ -141,9 +133,14 @@ combine_vecObj = function(filePath, objName=NULL, header=NULL, skip=NULL, txtCol
 #' @param object object name
 #' @return the object
 #' @references https://stackoverflow.com/questions/65964064/programmatically-extract-an-object-from-collection-of-rdata-files
+#' @examples
+#' tmp <- tempfile(fileext=".RData")
+#' x <- 1
+#' save(x, file=tmp)
+#' extract_RData(tmp, "x")
 #' @export
 
-extract_RData = function(file, object) {
+extract_RData <- function(file, object) {
   # Function for extracting an object from a .RData file created by R's save() command
   # Inputs: RData file, object name
   E <- new.env()
@@ -160,7 +157,7 @@ extract_RData = function(file, object) {
 #' @references https://stackoverflow.com/questions/11121385/repeat-rows-of-a-data-frame
 #' @noRd
 
-repeach = function(mat, n){
+repeach <- function(mat, n){
   mat1 <- mat[rep(seq_len(nrow(mat)), each=n), ]
   mat2 = as.matrix(mat1)
 
@@ -176,7 +173,7 @@ repeach = function(mat, n){
 #' @references Hua Liu, Jinhong You & Jiguo Cao (2023). A Dynamic Interaction Semiparametric Function-on-Scalar Model, Journal of the American Statistical Association, 118:541, 360-373, DOI: 10.1080/01621459.2021.1933496
 #' @noRd
 
-repmat = function(X, m, n){
+repmat <- function(X, m, n){
   mx = dim(X)[1]
   nx = dim(X)[2]
   matrix(t(matrix(X, mx, nx*n)), mx*m, nx*n, byrow=TRUE)
@@ -188,7 +185,7 @@ repmat = function(X, m, n){
 #' @references https://github.com/hyochoi/SCISSOR/blob/master/R/yaxis.hy.R
 #' @noRd
 
-yaxis.hy = function(mat){
+yaxis.hy <- function(mat){
   #  mat : d by n matrix
   tempmax <- max(mat) ;
   tempmin <- min(mat) ;

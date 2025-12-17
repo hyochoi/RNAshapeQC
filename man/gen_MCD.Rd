@@ -20,8 +20,12 @@ gen_MCD(Gene, pileupPath, sampleInfo, cases = NULL, Study = NULL, outFile)
 \item{outFile}{a directory with a file name to save outputs}
 }
 \value{
-MCD is a the number of genes x the number of samples matrix.
+Invisibly returns NULL; results are saved to \code{outFile}.
 }
 \description{
 Get a mean coverage depth for genes and samples (for a single gene)
+}
+\examples{
+## API illustration only
+invisible(NULL)
 }

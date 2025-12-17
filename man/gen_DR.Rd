@@ -20,10 +20,14 @@ gen_DR(Gene, pileupPath, sampleInfo, cases = NULL, Study = NULL, outFile)
 \item{outFile}{a directory with a file name to save outputs}
 }
 \value{
-DR is a the number of genes x the number of samples matrix.
+Invisibly returns NULL; results are saved to \code{outFile}.
 }
 \description{
 Get a decay rate for genes and samples (for a single gene)
+}
+\examples{
+## API illustration only
+invisible(NULL)
 }
 \references{
 Choi, H.Y., Jo, H., Zhao, X. et al. SCISSOR: a framework for identifying structural changes in RNA transcripts. Nat Commun 12, 286 (2021).

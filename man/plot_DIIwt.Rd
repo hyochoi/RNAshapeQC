@@ -21,6 +21,24 @@ figures for the distribution of DII by PD; and the heatmap of DR.
 \description{
 Plot degraded/intact index outputs
 }
+\examples{
+data("TOY_mrna")
+
+res <- get_DIIwt(
+  DR             = TOY_mrna$DR,
+  TPM            = TOY_mrna$TPM,
+  genelength.mat = TOY_mrna$genelength.mat
+)
+
+try(
+  plot_DIIwt(
+    DR        = TOY_mrna$DR,
+    DIIresult = res,
+    outFile   = tempfile(fileext=".png")
+  ),
+  silent = TRUE
+)
+}
 \references{
 https://jtr13.github.io/cc21fall2/raincloud-plot-101-density-plot-or-boxplotwhy-not-do-both.html
 }

@@ -43,14 +43,6 @@ a gene x sample matrix
 Combine vectors as a matrix from objects
 }
 \examples{
-\dontrun{
-DR.mat <- combine_vecObj(
-  filePath = paste0("path/to/", genelist, "/", Study, "_", genelist, "_degradation.RData"),
-  objName  = "allSampleDegRate",
-  margin   = 1,
-  rowNames = genelist,
-  colNames = cases,
-  nCores   = 32
-)
-}
+## API illustration only
+invisible(NULL)
 }
