@@ -26,7 +26,7 @@ plot_GBC = function(pileupPath, geneNames, rnum=100, method=1, scale=TRUE, stat=
 
   } else if (stat==2) {
     # Stat 2: Mean curve per sample
-    scale.geom <- matrixStats::rowMeans(scale.arr, dims=2)
+    scale.geom <- apply(scale.arr, 1, base::mean)
 
   } else {
     stop(stat," is not an option for stat.")
@@ -153,25 +153,31 @@ plot_DIIwt = function(DR, DIIresult, cutoff=3, outFile=NULL) {
   df$var <- factor(df$var, levels=rev(colnames(ds.vec2)), ordered=TRUE)
 
   # Distribution of PD by DII
-  d <- df %>%
-    ggplot2::ggplot(aes(x=var, y=value, fill=var)) +
-    PupillometryR::geom_flat_violin(position=position_nudge(x=0.2), alpha=0.4) +
-    geom_point(aes(color=case_when(
-      var=="DS" ~ "grey",
-      var=="PD" & value>cutoff ~ "#7C3F11",
-      var=="PD" & value<=cutoff ~ "mediumaquamarine")),
-      position=position_jitter(w=0.15, seed=12345), size=1.5, alpha=0.5, show.legend=F) +
-    geom_boxplot(width=0.25, outlier.shape=NA, alpha=0.5) +
-    scale_fill_manual(values=c(rep("grey", 2))) +
-    scale_color_identity() +
-    labs(x="", y="", fill="", title="") +
-    guides(fill=guide_legend(nrow=1, byrow=TRUE))+
-    theme(legend.position="none",
-          legend.margin=margin(-5, 0, 0, 0),
-          panel.background=element_rect(fill="gray97"),
-          axis.text=element_text(size=25),
-          axis.title=element_text(size=25)) +
-    coord_flip()
+  make_vioplot <- function(df_sub, cutoff) {
+    ggplot2::ggplot(df_sub, aes(x=var, y=value, fill=var)) +
+      PupillometryR::geom_flat_violin(position=position_nudge(x=0.2), alpha=0.4) +
+      geom_point(aes(color=case_when(
+        var=="DS" ~ "grey",
+        var=="PD" & value>cutoff ~ "#7C3F11",
+        var=="PD" & value<=cutoff ~ "mediumaquamarine")),
+        position=position_jitter(width=0.15, seed=12345), size=1.5, alpha=0.5, show.legend=F) +
+      geom_boxplot(width=0.25, outlier.shape=NA, alpha=0.5) +
+      scale_fill_manual(values=c(rep("grey", 2))) +
+      scale_color_identity() +
+      labs(x="", y="", fill="", title="") +
+      guides(fill=guide_legend(nrow=1, byrow=TRUE))+
+      theme(legend.position="none",
+            legend.margin=margin(-5, 0, 0, 0),
+            panel.background=element_rect(fill="gray97"),
+            axis.text=element_text(size=25),
+            axis.title=ggplot2::element_blank()) +
+      coord_flip()
+  }
+
+  p1 <- make_vioplot(filter(df, var=="DS"), cutoff)
+  p2 <- make_vioplot(filter(df, var=="PD"), cutoff)
+
+  d <- patchwork::wrap_plots(p1, p2, ncol=1)
 
   # Heatmap of DR
   ds.vec3 <- ds.vec %>%
@@ -193,8 +199,8 @@ plot_DIIwt = function(DR, DIIresult, cutoff=3, outFile=NULL) {
       axis_param=list(
         at=c(min(sample.df$DS), max(sample.df$DS)),
         labels=sprintf("%.4f", c(min(sample.df$DS), max(sample.df$DS)))
-        )
-      ),
+      )
+    ),
     "PD"=anno_points(
       sample.df$PD,
       size=unit(1.2, "mm"),
@@ -202,8 +208,8 @@ plot_DIIwt = function(DR, DIIresult, cutoff=3, outFile=NULL) {
       axis_param=list(
         at=c(min(sample.df$PD), max(sample.df$PD)),
         labels=sprintf("%.4f", c(min(sample.df$PD), max(sample.df$PD)))
-        )
-      ),
+      )
+    ),
     annotation_name_gp=gpar(fontsize=8),
     annotation_name_rot=c(00),
     col=list(DII=col_dii),
@@ -255,8 +261,8 @@ plot_DIIwt = function(DR, DIIresult, cutoff=3, outFile=NULL) {
       axis_param=list(
         at=c(min(gene.df$w_norm), max(gene.df$w_norm)),
         labels=sprintf("%.4f", c(min(gene.df$w_norm), max(gene.df$w_norm)))
-        )
-      ),
+      )
+    ),
     "Gene length"=gene.df$merged_kb_ecdf,
     "Mean TPM"=gene.df$mean.TPM_ecdf,
     annotation_name_gp=gpar(fontsize=8),
@@ -304,7 +310,7 @@ plot_DIIwt = function(DR, DIIresult, cutoff=3, outFile=NULL) {
     pd = packLegend(list=lapply(c(0,3:4), function(i) get(paste0("lgd", i))),
                     max_width=unit(15, "cm"),
                     direction="horizontal", column_gap=unit(1.5, "cm"))
-    draw(pd, x=unit(0.45, "npc"), y=unit(0, "npc"), just=c("center", "bottom"))
+    draw(pd, x=unit(0.45, "npc"), y=unit(0.05, "npc"), just=c("center", "bottom"))
   })
 
   # Save to outFile
@@ -323,10 +329,10 @@ plot_DIIwt = function(DR, DIIresult, cutoff=3, outFile=NULL) {
 
   message("Saving DIIwt plot to: ", normalizePath(outFile, mustWork=FALSE))
 
-  png(file=outFile, width=800*2, height=800, res=100)
+  grDevices::png(file=outFile, width=800*2, height=800, res=100)
   on.exit(dev.off(), add=TRUE)
 
-  dp <- ggpubr::ggarrange(d, as_ggplot(p), nrow=1, ncol=2, align="h")
+  dp <- ggpubr::ggarrange(d, as_ggplot(p), nrow=1, ncol=2, align="none")
   print(dp)
 }
 
@@ -357,25 +363,31 @@ plot_SOI = function(SOIresult, cutoff=3, outFile=NULL) {
   df$var <- factor(df$var, levels=rev(colnames(auc.vec2)), ordered=TRUE)
 
   # Distribution of PD by SOI
-  d <- df %>%
-    ggplot2::ggplot(aes(x=var, y=value, fill=var)) +
-    PupillometryR::geom_flat_violin(position=position_nudge(x=0.2), alpha=0.4) +
-    geom_point(aes(color=case_when(
-      var=="AUC" ~ "grey",
-      var=="PD" & value>cutoff ~ "red",
-      var=="PD" & value<=cutoff ~ "darkgreen")),
-      position=position_jitter(w=0.15, seed=12345), size=1.5, alpha=0.5, show.legend=F) +
-    geom_boxplot(width=0.25, outlier.shape=NA, alpha=0.5) +
-    scale_fill_manual(values=c(rep("grey", 2))) +
-    scale_color_identity() +
-    labs(x="", y="", fill="", title="") +
-    guides(fill=guide_legend(nrow=1, byrow=TRUE))+
-    theme(legend.position="none",
-          legend.margin=margin(-5, 0, 0, 0),
-          panel.background=element_rect(fill="gray97"),
-          axis.text=element_text(size=25),
-          axis.title=element_text(size=25)) +
-    coord_flip()
+  make_vioplot <- function(df_sub, cutoff) {
+    ggplot2::ggplot(df_sub, aes(x=var, y=value, fill=var)) +
+      PupillometryR::geom_flat_violin(position=position_nudge(x=0.2), alpha=0.4) +
+      geom_point(aes(color=case_when(
+        var=="AUC" ~ "grey",
+        var=="PD" & value>cutoff ~ "red",
+        var=="PD" & value<=cutoff ~ "darkgreen")),
+        position=position_jitter(width=0.15, seed=12345), size=1.5, alpha=0.5, show.legend=F) +
+      geom_boxplot(width=0.25, outlier.shape=NA, alpha=0.5) +
+      scale_fill_manual(values=c(rep("grey", 2))) +
+      scale_color_identity() +
+      labs(x="", y="", fill="", title="") +
+      guides(fill=guide_legend(nrow=1, byrow=TRUE))+
+      theme(legend.position="none",
+            legend.margin=margin(-5, 0, 0, 0),
+            panel.background=element_rect(fill="gray97"),
+            axis.text=element_text(size=25),
+            axis.title=ggplot2::element_blank()) +
+      coord_flip()
+  }
+
+  p1 <- make_vioplot(filter(df, var=="AUC"), cutoff)
+  p2 <- make_vioplot(filter(df, var=="PD"), cutoff)
+
+  d <- patchwork::wrap_plots(p1, p2, ncol=1)
 
   # Relation of wCV and MCD
   auc.coord$SOI <- factor(auc.coord$SOI, levels=c("Suboptimal", "Optimal"))
@@ -416,9 +428,9 @@ plot_SOI = function(SOIresult, cutoff=3, outFile=NULL) {
 
   message("Saving SOI plot to: ", normalizePath(outFile, mustWork=FALSE))
 
-  png(file=outFile, width=800*2, height=800, res=100)
+  grDevices::png(file=outFile, width=800*2, height=800, res=100)
   on.exit(dev.off(), add=TRUE)
 
-  dp <- ggpubr::ggarrange(d, p, nrow=1, ncol=2, align="h")
+  dp <- ggpubr::ggarrange(d, p, nrow=1, ncol=2, align="none")
   print(dp)
 }

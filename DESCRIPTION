@@ -29,7 +29,6 @@ Authors@R:
              role = c("aut", "cph"),
              comment = c(ORCID = "0000-0002-7627-8493"))
     )
-Maintainer: Miyeon Yeon <myeon@uthsc.edu>
 Description: 
     RNAshapeQC provides coverage-shape-based quality control (QC) metrics 
     for mRNA-seq and total RNA-seq data. It supports per-gene pileup 
@@ -41,40 +40,35 @@ Description:
     functions for per-gene batch processing and cross-study pileup generation. 
     This package enables interpretable, protocol-specific QC assessments for 
     diverse RNA-seq workflows.
-License: GPL-3
+License: MIT + file LICENSE
 Encoding: UTF-8
-LazyData: false
 RoxygenNote: 7.3.2
 Depends:
-    R (>= 4.2)
+    R (>= 4.3)
 Imports:
+    SCISSOR,
     stats,
     utils,
-    methods,
-    parallel,
     GenomicRanges,
     IRanges,
-    S4Vectors,
     Rsamtools,
-    SummarizedExperiment,
-    BiocParallel,
-    SCISSOR,
-    zoo,
     foreach,
-    doParallel,
+    zoo,
     ggplot2,
-    DescTools,
     dplyr,
     magrittr,
-    tools,
     tidyr,
     ComplexHeatmap,
     circlize,
     colortools,
-    ggpubr,
     grid,
-    grDevices
+    grDevices,
+    dendextend,
+    DescTools,
+    ggpubr
 Suggests:
+    doParallel,
+    parallel,
     knitr,
     rmarkdown,
     BiocStyle,
@@ -83,15 +77,15 @@ Suggests:
     matrixStats,
     RColorBrewer,
     scales,
-    tibble
+    tibble,
+    patchwork
 biocViews: 
     RNASeq,
     QualityControl,
     Transcriptomics,
-    Coverage,
-    Software,
     Sequencing,
-    GenomicRanges
+    GenomicRanges,
+    Coverage
 URL: https://github.com/hyochoi/RNAshapeQC
 BugReports: https://github.com/hyochoi/RNAshapeQC/issues
 VignetteBuilder: knitr

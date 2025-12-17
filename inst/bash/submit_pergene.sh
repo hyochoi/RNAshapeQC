@@ -15,9 +15,9 @@
 ### ==== User-configurable settings (edit here) ============================ ###
 
 # Slurm settings (edit to match your cluster and job size)
-ACCOUNT="ACF-EXAMPLE0001"    # <-- change to your Slurm account
-PARTITION="short"            # <-- change to your partition name
-QOS="short"                  # <-- change to your QoS (if used)
+ACCOUNT="your_account"       # <-- change to your Slurm account
+PARTITION="your_partition"   # <-- change to your partition name
+QOS="your_qos"               # <-- change to your QoS (if used)
 
 JOB_NAME_PREFIX="sub_"       # prefix for per-gene job names
 TIME="3:00:00"               # walltime per gene job (e.g., 1:00:00, 3:00:00)

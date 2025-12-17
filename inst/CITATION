@@ -1,0 +1,21 @@
+citHeader("To cite RNAshapeQC in publications, please use:")
+
+citEntry(
+  entry    = "Manual",
+  title    = "RNAshapeQC: RNA coverage-shape-based quality control metrics",
+  author   = c(
+    person("Miyeon", "Yeon"),
+    person("Won-Young", "Choi"),
+    person("Jin Young", "Lee"),
+    person("Katherine A.", "Hoadley"),
+    person("D. Neil", "Hayes"),
+    person("Hyo Young", "Choi")
+  ),
+  year     = "2025",
+  note     = "R/Bioconductor package",
+  url      = "https://github.com/hyochoi/RNAshapeQC",
+  textVersion =
+    "Yeon M, Choi WY, Lee JY, Hoadley KA, Hayes DN, Choi HY (2025).
+     RNAshapeQC: RNA coverage-shape-based quality control metrics.
+     R/Bioconductor package. https://github.com/hyochoi/RNAshapeQC"
+)

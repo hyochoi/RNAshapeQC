@@ -42,7 +42,7 @@ norm_pileup.spl = function(pileup, rnum=100, method=1) {
 #' @param pileupData a coverage pileup matrix that columns are samples
 #' @param rnum the number of regions for uniformly dividing the x-axis. Default is 100.
 #' @param method 1 and 2 return the raw read depth and the interpolated read depth at the normalized genomic position, respectively. Default is 1.
-#' @param nCores the number of cores for parallel computing. Default is 32.
+#' @param nCores number of cores used internally for normalization.
 #' @return the normalized read depth is a rnum x the number of samples matrix.
 #' @references Choi, H.Y., Jo, H., Zhao, X. et al. SCISSOR: a framework for identifying structural changes in RNA transcripts. Nat Commun 12, 286 (2021).
 #' @noRd
@@ -55,7 +55,7 @@ norm_pileup.gene = function(pileupData, rnum=100, method=1, nCores=32) {
 
   normmat.gene <- do.call(cbind, parallel::mclapply(seq_len(ncol(pileupData)), function(i) {
     norm_pileup.spl(pileup=pileupData[, i], rnum=rnum, method=method)
-  }, mc.cores=nCores/2))
+  }, mc.cores=max(1L, as.integer(floor(nCores/2)))))
   colnames(normmat.gene) <- colnames(pileupData)
 
   return(normmat.gene)
@@ -151,6 +151,8 @@ scale_pileup.list = function(pileupPath, geneNames=NULL, rnum=100, method=1, sca
 #' @param margin 1, 2, and 3 return metrics per sample, per gene, and across the genes per sample, respectively.
 #' @return metrics including mean, sd, CV (sd/mean), median, mad, and robustCV (mad/median) per margin
 #' @references Choi, H.Y., Jo, H., Zhao, X. et al. SCISSOR: a framework for identifying structural changes in RNA transcripts. Nat Commun 12, 286 (2021).
+#' @importFrom dplyr desc
+#' @importFrom stats sd mad quantile
 #' @noRd
 
 get_metrics = function(pileupPath, geneNames=NULL, rnum=100, method=1, scale=TRUE, margin) {
@@ -164,10 +166,10 @@ get_metrics = function(pileupPath, geneNames=NULL, rnum=100, method=1, scale=TRU
     pos_mask <- array_data>0
     var.sum <- apply(array_data, mar[[margin]], function(x) sum(x^2))
     pos_data <- replace(array_data, !pos_mask, NA)  # replace non-positive values with NA
-    var.mean <- apply(pos_data, mar[[margin]], stats::mean, na.rm=TRUE)
-    var.sd <- apply(pos_data, mar[[margin]], stats::sd, na.rm=TRUE)
-    var.median <- apply(pos_data, mar[[margin]], stats::median, na.rm=TRUE)
-    var.mad <- apply(pos_data, mar[[margin]], stats::mad, na.rm=TRUE)
+    var.mean <- apply(pos_data, mar[[margin]], mean, na.rm=TRUE)
+    var.sd <- apply(pos_data, mar[[margin]], sd, na.rm=TRUE)
+    var.median <- apply(pos_data, mar[[margin]], median, na.rm=TRUE)
+    var.mad <- apply(pos_data, mar[[margin]], mad, na.rm=TRUE)
     CV <- ifelse(var.mean<1e-10 | var.sd<1e-10, 0, var.sd/var.mean) # to adjust NaN, Inf
     robustCV <- ifelse(var.median<1e-10 | var.mad<1e-10, 0, var.mad/var.median)
 

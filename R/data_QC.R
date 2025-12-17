@@ -1,8 +1,20 @@
 #' Core helper to compute decay rate
 #'
-#' @noRd
+#' @param pileupData exon-only coverage pileup matrix for a single gene.
+#' @param exonRanges GRanges object specifying exon coordinates for the gene.
+#' @param sampleInfo a sample information table including sample id. The number of rows is equal to the number of samples.
+#' @param cases optional character vector specifying a subset of samples.
+#'   used for handling missing coverage.
+#' @param logshiftVal numeric; passed to \code{SCISSOR::process_pileup()}.
+#' @param plotNormalization logical; passed to \code{SCISSOR::process_pileup()}.
+#' @details
+#' The arguments \code{pileupData}, \code{exonRanges}, \code{logshiftVal}, and
+#' \code{plotNormalization} are passed directly to
+#' \code{SCISSOR::process_pileup()}; see its documentation for details.
+#' @references Choi, H.Y., Jo, H., Zhao, X. et al. SCISSOR: a framework for identifying structural changes in RNA transcripts. Nat Commun 12, 286 (2021).
+#' @export
 
-.compute_DR = function(pileupData, exonRanges, sampleInfo, cases=NULL, logshiftVal=10, plotNormalization=FALSE) {
+compute_DR = function(pileupData, exonRanges, sampleInfo, cases=NULL, logshiftVal=10, plotNormalization=FALSE) {
 
   # No data: return NA vector
   if (is.null(pileupData)||nrow(pileupData) == 0L) {
@@ -67,8 +79,7 @@ get_DR = function(genelist, pileupPath, sampleInfo, cases=NULL, nCores=32) {
   DR <- foreach::foreach(
     g         = 1:length(pileupPath),
     .combine  = rbind,
-    .packages = c("SCISSOR"),
-    .export   = c("get_pileupExon", ".compute_DR")
+    .packages = c("SCISSOR", "RNAshapeQC")
   ) %dopar% {
 
     # Exon-only coverage for the g-th gene
@@ -86,7 +97,7 @@ get_DR = function(genelist, pileupPath, sampleInfo, cases=NULL, nCores=32) {
       )
 
       # Compute DR via core helper
-      allSampleDegRate <- .compute_DR(
+      allSampleDegRate <- compute_DR(
         pileupData        = pileupData,
         exonRanges        = exonRanges,
         sampleInfo        = sampleInfo,
@@ -137,7 +148,7 @@ gen_DR = function(Gene, pileupPath, sampleInfo, cases=NULL, Study=NULL, outFile)
   genelength <- max(exonRanges$cRanges)
 
   # Compute DR via core helper
-  allSampleDegRate <- .compute_DR(
+  allSampleDegRate <- compute_DR(
     pileupData        = pileupData,
     exonRanges        = exonRanges,
     sampleInfo        = sampleInfo,
@@ -165,7 +176,7 @@ get_DIIhc = function(DR, topPct=5) {
 
   DR <- na.omit(DR)
   # degrateGrp <- ifelse(DR>=quantile(as.vector(DR), 1-topPct/100, na.rm=TRUE), 1, 0)
-  degrateGrp <- 1*(DR>=quantile(as.vector(DR), 1-topPct/100, na.rm=TRUE))
+  degrateGrp <- 1*(DR>=stats::quantile(as.vector(DR), 1-topPct/100, na.rm=TRUE))
   hc_columns <- hclust(dist(t(degrateGrp), method="manhattan"), method="ward.D")
 
   # Convert to dendrogram
@@ -179,7 +190,7 @@ get_DIIhc = function(DR, topPct=5) {
   # Define index by meanSum
   cluster_means <- hd.vec %>%
     group_by(Cluster) %>%
-    summarise(meanSum=mean(ColSums), .groups="drop") %>%
+    summarise(meanSum=base::mean(ColSums), .groups="drop") %>%
     arrange(desc(meanSum)) %>%
     mutate(DII=c("Degraded", "Intact"), # Degraded if meanSum is greater
            Cluster_new=1:2) # Degraded: Cluster=1
@@ -195,7 +206,7 @@ get_DIIhc = function(DR, topPct=5) {
 #' Get a degraded/intact index for samples using gene weight
 #'
 #' @param DR a the number of genes x the number of samples matrix of decay rates
-#' @param alpha a positive numeric exponent factor to weight the magnitude of decay rates. Default is 1.5.
+#' @param alpha a positive numeric exponent factor to weight the magnitude of decay rates. Default is 2.
 #' @param cutoff numeric threshold on projection depth used to classify samples.
 #' @param TPM a numeric matrix of TPM values with the same genes in rows and the same samples in columns as \code{DR}.
 #' @param thru threshold. Default is 5.
@@ -207,7 +218,7 @@ get_DIIhc = function(DR, topPct=5) {
 #' @importFrom dplyr mutate select rename inner_join
 #' @export
 
-get_DIIwt = function(DR, alpha=1.5, cutoff=3, TPM, thru=5, pct=40, genelength.mat) {
+get_DIIwt = function(DR, alpha=2, cutoff=3, TPM, thru=5, pct=40, genelength.mat) {
 
   if (!identical(colnames(DR), colnames(TPM))) {
     stop("DR and TPM should have the same samples.")
@@ -266,9 +277,13 @@ get_DIIwt = function(DR, alpha=1.5, cutoff=3, TPM, thru=5, pct=40, genelength.ma
 
 #' Core helper to compute a mean coverage depth
 #'
-#' @noRd
+#' @param pileupData exon-only coverage pileup matrix for a single gene.
+#' @param sampleInfo a sample information table including sample id. The number of rows is equal to the number of samples.
+#' @param cases optional character vector specifying a subset of samples.
+#'   used for handling missing coverage.
+#' @export
 
-.compute_MCD = function(pileupData, sampleInfo, cases=NULL) {
+compute_MCD = function(pileupData, sampleInfo, cases=NULL) {
 
   # No data: return NA vector
   if (is.null(pileupData)||nrow(pileupData) == 0L) {
@@ -308,15 +323,14 @@ get_MCD = function(genelist, pileupPath, sampleInfo, cases=NULL, nCores=32) {
   MCD <- foreach::foreach(
     g         = 1:length(pileupPath),
     .combine  = rbind,
-    .packages = c("SCISSOR"),
-    .export   = c("get_pileupExon", ".compute_MCD", ".build_pileupExon")
+    .packages = c("SCISSOR", "RNAshapeQC")
   ) %dopar% {
 
     pileupData <- get_pileupExon(g, pileupPath, cases)
 
     if (!is.null(pileupData)&&nrow(pileupData) > 0L) {
 
-      mcd.vec <- .compute_MCD(
+      mcd.vec <- compute_MCD(
         pileupData = pileupData,
         sampleInfo = sampleInfo,
         cases      = cases
@@ -356,7 +370,7 @@ gen_MCD = function(Gene, pileupPath, sampleInfo, cases=NULL, Study=NULL, outFile
   pileupData <- extract_pileupExon(Gene, pileupPath, cases, Study)
 
   # Compute MCD via core helper
-  allSampleMCD <- .compute_MCD(
+  allSampleMCD <- compute_MCD(
     pileupData = pileupData,
     sampleInfo = sampleInfo,
     cases      = cases
@@ -368,10 +382,18 @@ gen_MCD = function(Gene, pileupPath, sampleInfo, cases=NULL, Study=NULL, outFile
 
 #' Core helper to compute a window coefficient of variation
 #'
+#' @param pileupData exon-only coverage pileup matrix for a single gene.
+#' @param sampleInfo a sample information table including sample id. The number of rows is equal to the number of samples.
+#' @param rnum the number of regions for uniformly dividing the x-axis. Default is 100.
+#' @param method 1 and 2 return the raw read depth and the interpolated read depth at the normalized genomic position, respectively. Default is 1.
+#' @param winSize window size of the rolling window. Default is 20.
+#' @param egPct edge percent (one-side) to calculate the trimmed mean. Default is 10.
+#' @param cases optional character vector specifying a subset of samples.
+#'   used for handling missing coverage.
 #' @importFrom zoo rollmean rollapply
-#' @noRd
+#' @export
 
-.compute_wCV = function(pileupData, sampleInfo, rnum=100, method=1, winSize=20, egPct=10, cases=NULL) {
+compute_wCV = function(pileupData, sampleInfo, rnum=100, method=1, winSize=20, egPct=10, cases=NULL) {
 
   # No data: return NA vector
   if (is.null(pileupData)||nrow(pileupData) == 0L) {
@@ -387,7 +409,7 @@ gen_MCD = function(Gene, pileupPath, sampleInfo, cases=NULL, Study=NULL, outFile
 
   # Rolling CV for each sample
   rmean <- zoo::rollmean(norm_pileup, winSize, fill=NA, align="center", by.column=TRUE)
-  rsd <- zoo::rollapply(norm_pileup, winSize, sd, fill=NA, align="center", by.column=TRUE)
+  rsd <- zoo::rollapply(norm_pileup, winSize, stats::sd, fill=NA, align="center", by.column=TRUE)
   cv.mat <- ifelse(rmean<1e-10 | rsd<1e-10, 0, rsd/rmean) # to adjust NaN, Inf
 
   # 0-adjusted trimmed mean per sample
@@ -396,7 +418,7 @@ gen_MCD = function(Gene, pileupPath, sampleInfo, cases=NULL, Study=NULL, outFile
     if (all(is.na(posVals))) {
       return(NA_real_)
     } else {
-      return(mean(posVals, na.rm=TRUE, trim=trimFrac))
+      return(base::mean(posVals, na.rm=TRUE, trim=trimFrac))
     }
   }
   trimFrac <- egPct/100
@@ -434,15 +456,14 @@ get_wCV = function(genelist, pileupPath, sampleInfo, rnum=100, method=1, winSize
   wCV <- foreach::foreach(
     g         = 1:length(pileupPath),
     .combine  = rbind,
-    .packages = c("zoo"),
-    .export   = c("get_pileupExon", "norm_pileup.gene", ".compute_wCV")
+    .packages = c("zoo", "RNAshapeQC")
   ) %dopar% {
 
     pileupData <- get_pileupExon(g, pileupPath, cases)
 
     if (!is.null(pileupData)&&nrow(pileupData) > 0L) {
 
-      wcv.vec <- .compute_wCV(
+      wcv.vec <- compute_wCV(
         pileupData = pileupData,
         sampleInfo = sampleInfo,
         rnum       = rnum,
@@ -493,7 +514,7 @@ gen_wCV = function(Gene, pileupPath, sampleInfo, rnum=100, method=1, winSize=20,
   pileupData <- extract_pileupExon(Gene, pileupPath, cases, Study)
 
   # Compute wCV via core helper
-  allSamplewCV <- .compute_wCV(
+  allSamplewCV <- compute_wCV(
     pileupData = pileupData,
     sampleInfo = sampleInfo,
     rnum       = rnum,
@@ -517,13 +538,12 @@ gen_wCV = function(Gene, pileupPath, sampleInfo, rnum=100, method=1, winSize=20,
 #' @return a matrix including a vector of SOI; a coordinate matrix of smoothed data; and a range of MCD.
 #' @importFrom magrittr %>%
 #' @importFrom dplyr mutate arrange distinct filter group_by summarise select inner_join
-#' @importFrom stats na.omit
 #' @importFrom ggplot2 ggplot_build geom_smooth geom_rect
 #' @export
 
 get_SOI = function(MCD, wCV, rstPct=20, obsPct=50, cutoff=3) {
 
-  auc.coord <- na.omit(data.frame(Gene=rep(rownames(MCD), ncol(MCD)),
+  auc.coord <- stats::na.omit(data.frame(Gene=rep(rownames(MCD), ncol(MCD)),
                                   Sample=rep(colnames(MCD), each=nrow(MCD)),
                                   MCD=as.vector(MCD),
                                   wCV=as.vector(wCV))) %>%
@@ -544,8 +564,8 @@ get_SOI = function(MCD, wCV, rstPct=20, obsPct=50, cutoff=3) {
 
   # Range of MCD
   posMCD <- MCD[MCD>0]
-  rangeMin = log10(quantile(posMCD, probs=rstPct/100, na.rm=TRUE)+1)
-  rangeMax = log10(quantile(posMCD, probs=1-rstPct/100, na.rm=TRUE)+1)
+  rangeMin = log10(stats::quantile(posMCD, probs=rstPct/100, na.rm=TRUE)+1)
+  rangeMax = log10(stats::quantile(posMCD, probs=1-rstPct/100, na.rm=TRUE)+1)
 
   auc.vec <- smoothData %>%
     filter(x>=rangeMin & x<rangeMax) %>% # restricted MCD

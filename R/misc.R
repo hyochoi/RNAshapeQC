@@ -113,14 +113,14 @@ combine_vecObj = function(filePath, objName=NULL, header=NULL, skip=NULL, txtCol
 
     } else if (ext=="txt") {
       if (is.null(header)||is.null(skip)||is.null(txtCol)) stop("header, skip, and txtCol should be specified for txt files.")
-      df <- read.table(i, header=header, skip=skip)
+      df <- utils::read.table(i, header=header, skip=skip)
       if (txtCol>ncol(df)) stop("txtCol exceeds number of columns in txt files: ", i)
       as.numeric(df[[txtCol]])
 
     } else {
       stop("Unsupported file type: ", ext)
     }
-  }, mc.cores=nCores-1)
+  }, mc.cores=max(1L, nCores-1L))
 
   # Combine by rows or columns
   if (margin==1) {
@@ -141,7 +141,7 @@ combine_vecObj = function(filePath, objName=NULL, header=NULL, skip=NULL, txtCol
 #' @param object object name
 #' @return the object
 #' @references https://stackoverflow.com/questions/65964064/programmatically-extract-an-object-from-collection-of-rdata-files
-#' @noRd
+#' @export
 
 extract_RData = function(file, object) {
   # Function for extracting an object from a .RData file created by R's save() command
@@ -195,3 +195,18 @@ yaxis.hy = function(mat){
   templen <- tempmax-tempmin ;
   return(c(tempmin-0.002*templen, tempmax+0.002*templen)) ;
 }
+
+
+#' Handle non-standard evaluation (NSE)
+#'
+#' @noRd
+
+utils::globalVariables(c(
+  "AUC", "CODING_BASES", "Cluster", "Cluster_new", "ColSums",
+  "DII", "DS", "INTRONIC_BASES", "Order", "PD", "RatioIntron",
+  "SOI", "Sample", "SampleID", "g", "geneSymbol", "geneid",
+  "genelength", "group", "logLength", "logTPM", "meanSum",
+  "merged_kb", "mt1", "pileupList", "region", "regions",
+  "scale.geom", "scaledLength", "value", "var", "w_norm",
+  "w_raw", "x", "x1", "x2", "xMCD", "y", "y1", "y2"
+))

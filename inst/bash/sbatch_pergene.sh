@@ -1,13 +1,13 @@
 #!/bin/bash
-#SBATCH --job-name=sba_TCGAhg19      # <-- change job name if desired
-#SBATCH --account=ACF-EXAMPLE0001    # <-- change to your Slurm account
+#SBATCH --job-name=your_jobname      # <-- change job name if desired
+#SBATCH --account=your_account       # <-- change to your Slurm account
 #SBATCH --output=sba_%j.out
 #SBATCH --error=sba_%j.err
 #SBATCH --time=24:00:00              # <-- change walltime for submission job
 #SBATCH --mem=2G                     # <-- change memory for submission job
 #SBATCH --cpus-per-task=1            # <-- change CPUs for submission job
-#SBATCH --partition=campus           # <-- change to your partition
-#SBATCH --qos=campus                 # <-- change to your QoS
+#SBATCH --partition=your_partition   # <-- change to your partition
+#SBATCH --qos=your_qos               # <-- change to your QoS
 
 # sbatch_pergene.sh
 # Description:

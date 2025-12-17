@@ -23,7 +23,7 @@ suppressPackageStartupMessages({
 })
 
 # Test R functions
-# devtools::document() 
+# devtools::document()
 # devtools::load_all() # load development version
 ```
 
@@ -73,11 +73,11 @@ _RNAshapeQC_ provides two complementary workflows: one for mRNA-seq and one for 
 - Total RNA-seq:  
   BAM → (BAM slicing) → pileup → MCD & wCV → AUC → PD → SOI → downstream applications
 
-This vignette focuses on users who already have processed matrices (e.g., DR/TPM/gene lengths for mRNA-seq or MCD/wCV for total RNA-seq) and want to quickly compute DII or SOI.
+For large cohorts or high-throughput analyses on HPC systems, additional execution considerations are discussed separately.
 
-In this vignette, we illustrate a **minimal, fully runnable workflow** using small synthetic toy datasets included in the package. These toy objects mimic typical patterns of RNA degradation and coverage nonuniformity but do not contain any real cohort data.
+This vignette focuses on users who already have processed matrices (e.g., DR/TPM/gene lengths for mRNA-seq or MCD/wCV for total RNA-seq) and want to quickly compute DII or SOI. In this vignette, we illustrate a **minimal, fully runnable workflow** using small synthetic toy datasets included in the package. These toy objects mimic typical patterns of RNA degradation and coverage nonuniformity but do not contain any real cohort data.
 
-For detailed method descriptions and extended examples, please refer to the **external user manual** ([_RNAshapeQCdocs_](https://bookdown.org/sqr_yeon/RNAshapeQCdocs/)).
+For detailed method descriptions and extended examples, please refer to the **external user manual** ([_RNAshapeQCdocs_](https://miyeonyeon.github.io/bioc-vignettes/RNAshapeQCdocs_book/)).
 
 
 
@@ -154,7 +154,7 @@ We can plot the distributions of DS and PD, as well as the heatmap of DR with ge
 outfile <- file.path(tempdir(), "Fig_DIIwt.png")
 
 plot_DIIwt(
-  DR        = TOY_mrna$DR,
+  DR        = res_dii$DR2,
   DIIresult = res_dii,
   outFile   = outfile
 )
@@ -284,9 +284,9 @@ Once pileups are available, users can apply the same QC metrics as in this vigne
 
 ***
 
-**NOTE**
+**HPC and Slurm execution strategies**
 
-Full HPC/Slurm workflows (e.g., per-gene batch submission) are highly dataset- and cluster-specific. Therefore, _RNAshapeQC_ only provides simple example bash scripts under `inst/bash/`, and users can write their own R wrappers (e.g., per-gene `Rscript STUDY GENE`) following the same pattern as shown in this vignette.
+Full HPC/Slurm workflows (e.g., per-gene batch submission) are highly dataset- and cluster-specific. Therefore, _RNAshapeQC_ only provides simple example bash scripts under `inst/bash/`, and users can write their own R wrappers following the same pattern as shown in this vignette.
 
 _RNAshapeQC_ distinguishes between two types of functions for computing QC metrics:
 

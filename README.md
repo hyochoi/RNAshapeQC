@@ -1,6 +1,6 @@
 # RNAshapeQC
 
-**RNA** Coverage-**Shape**-Based **Quality Control** metrics
+**RNA** Coverage-**Shape**-Based **Quality Control** Metrics
 
 
 ## Description
@@ -36,4 +36,10 @@ BiocManager::install("RNAshapeQC", dependencies=TRUE)
 
 ## Citation
 
-To be added.
+If you use _RNAshapeQC_ in your research, please cite the package as follows:
+
+```r
+citation("RNAshapeQC")
+```
+
+A manuscript describing the methodology and applications of _RNAshapeQC_ is currently in preparation. Citation information will be updated upon publication.

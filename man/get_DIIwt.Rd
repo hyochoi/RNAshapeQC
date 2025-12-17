@@ -4,12 +4,12 @@
 \alias{get_DIIwt}
 \title{Get a degraded/intact index for samples using gene weight}
 \usage{
-get_DIIwt(DR, alpha = 1.5, cutoff = 3, TPM, thru = 5, pct = 40, genelength.mat)
+get_DIIwt(DR, alpha = 2, cutoff = 3, TPM, thru = 5, pct = 40, genelength.mat)
 }
 \arguments{
 \item{DR}{a the number of genes x the number of samples matrix of decay rates}
 
-\item{alpha}{a positive numeric exponent factor to weight the magnitude of decay rates. Default is 1.5.}
+\item{alpha}{a positive numeric exponent factor to weight the magnitude of decay rates. Default is 2.}
 
 \item{cutoff}{numeric threshold on projection depth used to classify samples.}
 
