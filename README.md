@@ -36,7 +36,7 @@ BiocManager::install("RNAshapeQC", dependencies=TRUE)
 
 ## Citation
 
-If you use _RNAshapeQC_ in your research, please cite the package as follows:
+If you use _RNAshapeQC_ in your research, please cite the package using:
 
 ```r
 citation("RNAshapeQC")
