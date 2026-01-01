@@ -175,7 +175,6 @@ plot_GBCos <- function(stat=2, plot=TRUE, sampleInfo, GBCresult, auc.vec) {
 #' @importFrom ComplexHeatmap Heatmap HeatmapAnnotation rowAnnotation
 #' @importFrom ComplexHeatmap anno_points Legend draw packLegend
 #' @importFrom circlize colorRamp2
-#' @importFrom colortools setColors
 #' @importFrom ggpubr as_ggplot
 #' @importFrom grid grid.grabExpr pushViewport viewport unit gpar
 #' @importFrom grDevices png dev.off
@@ -247,8 +246,7 @@ plot_DIIwt <- function(DR, DIIresult, cutoff=3, outFile=NULL) {
   sample.df <- ds.vec3
 
   col_dii = c("Intact"="mediumaquamarine", "Degraded"="#7C3F11")
-  # colwheel <- colortools::wheel("#E41A1C", num=2*2)
-  colwheel <- colortools::setColors("#E41A1C", num=2*2)
+  colwheel <- c("#E41A1C", "#81E41A", "#1AE4E2", "#7D1AE4")
 
   column_ha = HeatmapAnnotation(
     "DII"=sample.df$DII,

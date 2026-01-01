@@ -46,7 +46,6 @@ RoxygenNote: 7.3.2
 Depends:
     R (>= 4.4)
 Imports:
-    SCISSOR,
     GenomicRanges,
     IRanges,
     Rsamtools,
@@ -58,10 +57,10 @@ Imports:
     tidyr,
     ComplexHeatmap,
     circlize,
-    colortools,
     dendextend,
     DescTools,
-    ggpubr
+    ggpubr,
+    MASS
 Suggests:
     doParallel,
     knitr,
@@ -78,6 +77,7 @@ Suggests:
 biocViews: 
     RNASeq,
     QualityControl,
+    Coverage,
     Transcriptomics,
     Sequencing
 URL: https://github.com/hyochoi/RNAshapeQC

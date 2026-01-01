@@ -5,13 +5,13 @@
 #' @param sampleInfo a sample information table including sample id. The number of rows is equal to the number of samples.
 #' @param cases optional character vector specifying a subset of samples.
 #'   used for handling missing coverage.
-#' @param logshiftVal numeric; passed to \code{SCISSOR::process_pileup()}.
-#' @param plotNormalization logical; passed to \code{SCISSOR::process_pileup()}.
+#' @param logshiftVal numeric; passed to \code{process_pileup()}.
+#' @param plotNormalization logical; passed to \code{process_pileup()}.
 #' @return a numeric vector of decay rates, one value per sample.
 #' @details
 #' The arguments \code{pileupData}, \code{exonRanges}, \code{logshiftVal}, and
 #' \code{plotNormalization} are passed directly to
-#' \code{SCISSOR::process_pileup()}; see its documentation for details.
+#' \code{process_pileup()}; see its documentation for details.
 #' @references Choi, H.Y., Jo, H., Zhao, X. et al. SCISSOR: a framework for identifying structural changes in RNA transcripts. Nat Commun 12, 286 (2021).
 #' @examples
 #' ## API illustration only
@@ -27,10 +27,16 @@
 #'
 #' sampleInfo <- data.frame(SampleID=colnames(pileupData))
 #'
-#' exonRanges <- SCISSOR::get_Ranges(
-#'   Gene       = "KEAP1",
-#'   regions    = "chr19:10600000-10650000:+",
-#'   outputType = "only_exon"
+#' exonRanges <- list(
+#'   Gene = "KEAP1",
+#'   cRanges = data.frame(
+#'     e.start = c(1),
+#'     e.end   = c(50001),
+#'     row.names = "exon1"
+#'   ),
+#'   regions     = "chr19:10600000-10650000:+",
+#'   new.regions = "chr19:10600000-10650000:+",
+#'   strand      = "+"
 #' )
 #'
 #' compute_DR(
@@ -56,7 +62,7 @@ compute_DR <- function(pileupData, exonRanges, sampleInfo, cases=NULL, logshiftV
   # Run process_pileup with basic error handling
   data.process <- tryCatch(
     {
-      SCISSOR::process_pileup(
+      process_pileup(
         pileupData        = pileupData,
         Ranges            = exonRanges,
         logshiftVal       = logshiftVal,
@@ -77,7 +83,7 @@ compute_DR <- function(pileupData, exonRanges, sampleInfo, cases=NULL, logshiftV
       allSampleDegRate <- rep(NA_real_, length(cases))
     }
   } else {
-    allSampleDegRate <- SCISSOR::decay.rate.hy(Data=data.process$normalizedData)$slope*d
+    allSampleDegRate <- decay.rate.hy(Data=data.process$normalizedData)$slope*d
   }
 
   return(allSampleDegRate)
@@ -133,7 +139,7 @@ get_DR <- function(genelist, pileupPath, sampleInfo, cases=NULL, nCores=32) {
       # Exon ranges for this gene
       Gene   <- genelist[g]
       Ranges <- extract_RData(pileupPath[g], "Ranges")
-      exonRanges <- SCISSOR::get_Ranges(
+      exonRanges <- get_Ranges(
         Gene       = Gene,
         regions    = Ranges$regions,
         outputType = "only_exon"
@@ -186,7 +192,7 @@ gen_DR <- function(Gene, pileupPath, sampleInfo, cases=NULL, Study=NULL, outFile
 
   # Gene length based on geneRanges
   geneRanges <- extract_RData(pileupPath, "geneRanges")
-  exonRanges <- SCISSOR::get_Ranges(
+  exonRanges <- get_Ranges(
     Gene       = Gene,
     regions    = geneRanges$regions,
     outputType = "only_exon"
@@ -317,7 +323,7 @@ get_DIIwt <- function(DR, alpha=2, cutoff=3, TPM, thru=5, pct=40, genelength.mat
   w_norm=gene.df$w_norm
   ds.vec <- data.frame(Sample=colnames(DR2),
                        DS=as.vector(crossprod(w_norm, sign(DR2)*abs(DR2)^alpha))) %>%
-    mutate(PD=SCISSOR::pd.rate.hy(DS, qrsc=TRUE), # projection depth
+    mutate(PD=pd.rate.hy(DS, qrsc=TRUE), # projection depth
            DII=ifelse(PD>cutoff, "Degraded", "Intact")) # outlier detection
 
   return(list(DR2=DR2, ds.vec=ds.vec, gene.df=gene.df, s=s))
@@ -704,7 +710,7 @@ get_SOI <- function(MCD, wCV, rstPct=20, obsPct=50, cutoff=3) {
     filter(x>=rangeMin & x<rangeMax) %>% # restricted MCD
     group_by(Sample) %>%
     summarise(AUC=DescTools::AUC(x, y, method="spline")) %>% # calculate AUC
-    mutate(PD=SCISSOR::pd.rate.hy(AUC, qrsc=TRUE), # projection depth
+    mutate(PD=pd.rate.hy(AUC, qrsc=TRUE), # projection depth
            SOI=ifelse(PD>cutoff, "Suboptimal", "Optimal")) # outlier detection
 
   auc.coord <- smoothData %>%

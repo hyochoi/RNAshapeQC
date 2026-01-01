@@ -234,7 +234,7 @@ construct_pileup <- function(
   )
 
   # Obtain SCISSOR-style Ranges object for this gene
-  Ranges <- SCISSOR::get_Ranges(
+  Ranges <- get_Ranges(
     Gene       = Gene,
     regions    = regions,
     outputType = "part_intron"
@@ -349,11 +349,11 @@ construct_pileup <- function(
   }
 
   if (!exists("regions")) {
-    stop("`regions` object not found in loaded file; required for SCISSOR::build_pileup.")
+    stop("`regions` object not found in loaded file; required for build_pileup.")
   }
 
   # Keep exon location of union transcripts in pileup
-  pileupData <- SCISSOR::build_pileup(
+  pileupData <- build_pileup(
     Pileup     = pileup,
     regions    = regions,
     inputType  = "part_intron",

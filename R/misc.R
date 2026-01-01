@@ -180,20 +180,6 @@ repmat <- function(X, m, n){
 }
 
 
-#' Adjust y-axis for a plot
-#'
-#' @references https://github.com/hyochoi/SCISSOR/blob/master/R/yaxis.hy.R
-#' @noRd
-
-yaxis.hy <- function(mat){
-  #  mat : d by n matrix
-  tempmax <- max(mat) ;
-  tempmin <- min(mat) ;
-  templen <- tempmax-tempmin ;
-  return(c(tempmin-0.002*templen, tempmax+0.002*templen)) ;
-}
-
-
 #' Handle non-standard evaluation (NSE)
 #'
 #' @noRd

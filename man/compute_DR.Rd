@@ -23,9 +23,9 @@ compute_DR(
 \item{cases}{optional character vector specifying a subset of samples.
 used for handling missing coverage.}
 
-\item{logshiftVal}{numeric; passed to \code{SCISSOR::process_pileup()}.}
+\item{logshiftVal}{numeric; passed to \code{process_pileup()}.}
 
-\item{plotNormalization}{logical; passed to \code{SCISSOR::process_pileup()}.}
+\item{plotNormalization}{logical; passed to \code{process_pileup()}.}
 }
 \value{
 a numeric vector of decay rates, one value per sample.
@@ -36,7 +36,7 @@ Core helper to compute decay rate
 \details{
 The arguments \code{pileupData}, \code{exonRanges}, \code{logshiftVal}, and
 \code{plotNormalization} are passed directly to
-\code{SCISSOR::process_pileup()}; see its documentation for details.
+\code{process_pileup()}; see its documentation for details.
 }
 \examples{
 ## API illustration only
@@ -52,10 +52,16 @@ colnames(pileupData) <- c("S1", "S2", "S3", "S4")
 
 sampleInfo <- data.frame(SampleID=colnames(pileupData))
 
-exonRanges <- SCISSOR::get_Ranges(
-  Gene       = "KEAP1",
-  regions    = "chr19:10600000-10650000:+",
-  outputType = "only_exon"
+exonRanges <- list(
+  Gene = "KEAP1",
+  cRanges = data.frame(
+    e.start = c(1),
+    e.end   = c(50001),
+    row.names = "exon1"
+  ),
+  regions     = "chr19:10600000-10650000:+",
+  new.regions = "chr19:10600000-10650000:+",
+  strand      = "+"
 )
 
 compute_DR(

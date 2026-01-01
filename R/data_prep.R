@@ -4,7 +4,6 @@
 #' @param rnum the number of regions for uniformly dividing the x-axis. Default is 100.
 #' @param method 1 and 2 return the raw read depth and the interpolated read depth at the normalized genomic position, respectively. Default is 1.
 #' @return the normalized read depth is a vector with length=rnum.
-#' @references Choi, H.Y., Jo, H., Zhao, X. et al. SCISSOR: a framework for identifying structural changes in RNA transcripts. Nat Commun 12, 286 (2021).
 #' @noRd
 
 norm_pileup.spl <- function(pileup, rnum=100, method=1) {
@@ -44,7 +43,6 @@ norm_pileup.spl <- function(pileup, rnum=100, method=1) {
 #' @param method 1 and 2 return the raw read depth and the interpolated read depth at the normalized genomic position, respectively. Default is 1.
 #' @param nCores number of cores used internally for normalization.
 #' @return the normalized read depth is a rnum x the number of samples matrix.
-#' @references Choi, H.Y., Jo, H., Zhao, X. et al. SCISSOR: a framework for identifying structural changes in RNA transcripts. Nat Commun 12, 286 (2021).
 #' @noRd
 
 norm_pileup.gene <- function(pileupData, rnum=100, method=1, nCores=32) {
@@ -70,7 +68,6 @@ norm_pileup.gene <- function(pileupData, rnum=100, method=1, nCores=32) {
 #' @param method 1 and 2 return the raw read depth and the interpolated read depth at the normalized genomic position, respectively. Default is 1.
 #' @param cases a vector of specific samples among all samples in pileup. If NULL, all samples are selected. Default is NULL.
 #' @return the normalized read depth is a rnum x the number of samples matrix at each gene list.
-#' @references Choi, H.Y., Jo, H., Zhao, X. et al. SCISSOR: a framework for identifying structural changes in RNA transcripts. Nat Commun 12, 286 (2021).
 #' @noRd
 
 norm_pileup.list <- function(pileupPath, geneNames=NULL, rnum=100, method=1, cases=NULL) {
@@ -117,7 +114,6 @@ norm_pileup.list <- function(pileupPath, geneNames=NULL, rnum=100, method=1, cas
 #' @param scale TRUE/FALSE returns the scaled/unscaled normalized transcript coverage. Default is TRUE.
 #' @param cases a vector of specific samples among all samples in pileup. If NULL, all samples are selected. Default is NULL.
 #' @return gene lists (rows are regions and columns are samples) for the normalized transcript coverage after gene length normalization
-#' @references Choi, H.Y., Jo, H., Zhao, X. et al. SCISSOR: a framework for identifying structural changes in RNA transcripts. Nat Commun 12, 286 (2021).
 #' @noRd
 
 scale_pileup.list <- function(pileupPath, geneNames=NULL, rnum=100, method=1, scale=TRUE, cases=NULL) {
@@ -150,7 +146,6 @@ scale_pileup.list <- function(pileupPath, geneNames=NULL, rnum=100, method=1, sc
 #' @param scale TRUE/FALSE returns the scaled/unscaled normalized transcript coverage. Default is TRUE.
 #' @param margin 1, 2, and 3 return metrics per sample, per gene, and across the genes per sample, respectively.
 #' @return metrics including mean, sd, CV (sd/mean), median, mad, and robustCV (mad/median) per margin
-#' @references Choi, H.Y., Jo, H., Zhao, X. et al. SCISSOR: a framework for identifying structural changes in RNA transcripts. Nat Commun 12, 286 (2021).
 #' @importFrom dplyr desc
 #' @importFrom stats sd mad quantile
 #' @noRd
