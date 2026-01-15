@@ -1,7 +1,7 @@
 Package: RNAshapeQC
 Type: Package
 Title: RNA Coverage-Shape-Based Quality Control Metrics
-Version: 0.99.1
+Version: 0.99.0
 Authors@R: 
     c(
       person("Miyeon", "Yeon",
