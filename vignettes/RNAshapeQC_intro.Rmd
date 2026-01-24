@@ -222,6 +222,67 @@ knitr::include_graphics(outfile)
 
 
 
+# Interoperability with Bioconductor
+
+_RNAshapeQC_ outputs can be organized using the [_SummarizedExperiment_](https://bioconductor.org/packages/devel/bioc/vignettes/SummarizedExperiment/inst/doc/SummarizedExperiment.html) class, which ensures consistent handling of assay and associated meta-data during subsetting. In the container, matrices of DR, MCD, and wCV are stored as `assays()`, where rows denote genes and columns represent samples. The gene or sample information tables (annotations) are stored using the `rowData()` and `colData()` functions, respectively. `metadata()` can contain additional QC-related information such as scale factors, MCD ranges, and cutoff values. 
+
+This is an example of constructing `SummarizedExperiment` objects and applying sample-level QCs to filter out low-quality samples before downstream analysis. This coordinated subsetting operation is simultaneously applied to both assays and column data, allowing proper filtering and preventing mismatches between QC metrics and downstream analysis inputs, as shown in `se_mrna_hq` and `se_total_hq`.
+
+```{r se, message=FALSE, echo=TRUE}
+library(SummarizedExperiment)
+
+# mRNA-seq
+stopifnot(
+  identical(rownames(res_dii$DR2), rownames(res_dii$gene.df)),
+  identical(colnames(res_dii$DR2), res_dii$ds.vec$Sample)
+)
+
+se_mrna <- SummarizedExperiment(
+  assays = list(
+    DR = res_dii$DR2
+  ),
+  rowData = res_dii$gene.df,
+  colData = res_dii$ds.vec,
+  metadata = list(
+    DR_ver = "v2 (low expressed genes filtered)",
+    s = res_dii$s
+  )
+)
+se_mrna
+
+# Total RNA-seq
+stopifnot(
+  identical(rownames(TOY_total$MCD), rownames(TOY_total$wCV)),
+  identical(colnames(TOY_total$MCD), res_soi$auc.vec$Sample),
+  identical(colnames(TOY_total$wCV), res_soi$auc.vec$Sample)
+)
+
+se_total <- SummarizedExperiment(
+  assays = list(
+    MCD = TOY_total$MCD,
+    wCV = TOY_total$wCV
+  ),
+  rowData = DataFrame(Gene = rownames(TOY_total$MCD)),
+  colData = res_soi$auc.vec,
+  metadata = list(
+    auc.coord = res_soi$auc.coord,
+    rangeMCD = res_soi$rangeMCD
+  )
+)
+se_total
+
+# Subsetting to keep high-quality samples in total RNA-seq
+se_total_hq <- se_total[, se_total$SOI=="Optimal"]
+# head(assay(se_total_hq, "MCD"))
+head(assay(se_total_hq, "wCV"))
+colData(se_total_hq)
+```
+
+The resulting `SummarizedExperiment` objects from _RNAshapeQC_ outputs can be directly integrated into standard Bioconductor workflows. Specifically, the protocol-specific QC metrics stored in `colData()` can be used for filtering or included as covariates in a differential expression analysis ([_DESeq2_](https://bioconductor.org/packages/release/bioc/vignettes/DESeq2/inst/doc/DESeq2.html)) (e.g., `design = ~ batch + condition + SOI`).
+
+
+
+
 # Overview of Pileup Construction
 
 In real applications (e.g., TCGA, Alliance/CALGB), users typically start from BAM files.
