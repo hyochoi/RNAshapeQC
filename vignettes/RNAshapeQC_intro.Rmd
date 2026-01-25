@@ -226,7 +226,7 @@ knitr::include_graphics(outfile)
 
 _RNAshapeQC_ outputs can be organized using the [_SummarizedExperiment_](https://bioconductor.org/packages/devel/bioc/vignettes/SummarizedExperiment/inst/doc/SummarizedExperiment.html) class, which ensures consistent handling of assay and associated meta-data during subsetting. In the container, matrices of DR, MCD, and wCV are stored as `assays()`, where rows denote genes and columns represent samples. The gene or sample information tables (annotations) are stored using the `rowData()` and `colData()` functions, respectively. `metadata()` can contain additional QC-related information such as scale factors, MCD ranges, and cutoff values. 
 
-This is an example of constructing `SummarizedExperiment` objects and applying sample-level QCs to filter out low-quality samples before downstream analysis. This coordinated subsetting operation is simultaneously applied to both assays and column data, allowing proper filtering and preventing mismatches between QC metrics and downstream analysis inputs, as shown in `se_mrna_hq` and `se_total_hq`.
+This is an example of constructing `SummarizedExperiment` objects and applying sample-level QCs to filter out low-quality samples before downstream analysis. This coordinated subsetting operation is simultaneously applied to both assays and column data, allowing proper filtering and preventing mismatches between QC metrics and downstream analysis inputs, as shown in `se_total_hq`.
 
 ```{r se, message=FALSE, echo=TRUE}
 library(SummarizedExperiment)
