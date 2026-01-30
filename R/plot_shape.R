@@ -217,7 +217,7 @@ plot_DIIwt <- function(DR, DIIresult, cutoff=3, outFile=NULL) {
         var=="DS" ~ "grey",
         var=="PD" & value>cutoff ~ "#7C3F11",
         var=="PD" & value<=cutoff ~ "mediumaquamarine")),
-        position=position_jitter(width=0.15, seed=12345), size=1.5, alpha=0.5, show.legend=F) +
+        position=position_jitter(width=0.15, seed=12345), size=1.5, alpha=0.5, show.legend=FALSE) +
       geom_boxplot(width=0.25, outlier.shape=NA, alpha=0.5) +
       scale_fill_manual(values=c(rep("grey", 2))) +
       scale_color_identity() +
@@ -438,7 +438,7 @@ plot_SOI <- function(SOIresult, cutoff=3, outFile=NULL) {
         var=="AUC" ~ "grey",
         var=="PD" & value>cutoff ~ "red",
         var=="PD" & value<=cutoff ~ "darkgreen")),
-        position=position_jitter(width=0.15, seed=12345), size=1.5, alpha=0.5, show.legend=F) +
+        position=position_jitter(width=0.15, seed=12345), size=1.5, alpha=0.5, show.legend=FALSE) +
       geom_boxplot(width=0.25, outlier.shape=NA, alpha=0.5) +
       scale_fill_manual(values=c(rep("grey", 2))) +
       scale_color_identity() +

@@ -440,8 +440,8 @@ ADstatWins.hy <- function(x,trim=NULL){
     n = length(x)
     m = floor(0.5*trim*n)
     if (m>0) {
-      y = x[order(x,decreasing=F)[-c(1:m)]]
-      x = y[order(y,decreasing=T)[-c(1:m)]]
+      y = x[order(x,decreasing=FALSE)[-c(1:m)]]
+      x = y[order(y,decreasing=TRUE)[-c(1:m)]]
     }
   }
   n = length(x);
@@ -558,10 +558,10 @@ normalize_data <- function(inputData,
   goodcase = g1.offset$goodcase
   if (makePlot) {
     if (is.null(Gene)) {
-      plot_offset(offset.obj=g1.offset,draw.legend=T,
+      plot_offset(offset.obj=g1.offset,draw.legend=TRUE,
                   main="Before normalization",...)
     } else {
-      plot_offset(offset.obj=g1.offset,draw.legend=T,
+      plot_offset(offset.obj=g1.offset,draw.legend=TRUE,
                   main=paste0(Gene," | Before normalization"),...)
     }
   }
@@ -585,10 +585,10 @@ normalize_data <- function(inputData,
     }
     if (makePlot) {
       if (is.null(Gene)) {
-        plot_offset(offset.obj=g2.offset,draw.legend=T,
+        plot_offset(offset.obj=g2.offset,draw.legend=TRUE,
                     main="After normalization",...)
       } else {
-        plot_offset(offset.obj=g2.offset,draw.legend=T,
+        plot_offset(offset.obj=g2.offset,draw.legend=TRUE,
                     main=paste0(Gene," | After normalization"),...)
       }
     }

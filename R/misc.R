@@ -146,7 +146,7 @@ extract_RData <- function(file, object) {
   E <- new.env()
   load(file=file, envir=E)
 
-  return(get(object, envir=E, inherits=F))
+  return(get(object, envir=E, inherits=FALSE))
 }
 
 
