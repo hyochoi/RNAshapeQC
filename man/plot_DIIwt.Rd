@@ -25,9 +25,9 @@ Plot degraded/intact index outputs
 data("TOY_mrna")
 
 res <- get_DIIwt(
-  DR             = TOY_mrna$DR,
-  TPM            = TOY_mrna$TPM,
-  genelength.mat = TOY_mrna$genelength.mat
+  DR         = TOY_mrna$DR,
+  TPM        = TOY_mrna$TPM,
+  genelength = TOY_mrna$genelength
 )
 
 try(

@@ -322,6 +322,12 @@ construct_pileup <- function(
 #' @param study a character of study abbreviation in the pileupList. Default is NULL.
 #' @return a numeric matrix of exon-only coverage (rows: exon positions, columns: samples).
 #' @references Choi, H.Y., Jo, H., Zhao, X. et al. SCISSOR: a framework for identifying structural changes in RNA transcripts. Nat Commun 12, 286 (2021).
+#' @examples
+#' ## Requires a base-level coverage pileup .RData file
+#' try(
+#'   .build_pileupExon(pileupPath = "path/to/pileup.RData"),
+#'   silent = TRUE
+#' )
 #' @export
 
 .build_pileupExon <- function(pileupPath, cases=NULL, study=NULL) {
@@ -382,6 +388,12 @@ construct_pileup <- function(
 #' @param pileupPath file paths of coverage pileupData including .RData file names
 #' @param cases a vector of specific samples among all samples in pileup. If NULL, all samples are selected. Default is NULL.
 #' @return a focused pileup is a the number of exon locations x the number of samples matrix for the g-th gene.
+#' @examples
+#' ## Requires a base-level coverage pileup .RData file
+#' try(
+#'   get_pileupExon(g = 1, pileupPath = c("path/to/pileup1.RData", "path/to/pileup2.RData")),
+#'   silent = TRUE
+#' )
 #' @export
 
 get_pileupExon <- function(g, pileupPath, cases=NULL) {

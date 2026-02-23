@@ -258,31 +258,61 @@ get_DIIhc <- function(DR, topPct=5) {
 }
 
 
-#' Get a degraded/intact index for samples using gene weight
+#' Core helper to compute a degraded/intact index using gene weight
 #'
 #' @param DR a the number of genes x the number of samples matrix of decay rates
 #' @param alpha a positive numeric exponent factor to weight the magnitude of decay rates. Default is 2.
 #' @param cutoff numeric threshold on projection depth used to classify samples.
 #' @param TPM a numeric matrix of TPM values with the same genes in rows and the same samples in columns as \code{DR}.
-#' @param thru threshold. Default is 5.
+#' @param thr threshold. Default is 5.
 #' @param pct percent. Default is 40.
-#' @param genelength.mat a one-column gene length (bp) matrix with row names as gene IDs (no column names).
+#' @param genelength a gene length (bp) vector with names as gene IDs.
 #' @return a matrix of with decay rate with filtered genes; a matrix including a vector of DII; a data frame of gene info; and a scale factor.
 #' @importFrom magrittr %>%
-#' @importFrom stats na.omit median uniroot
+#' @importFrom stats na.omit median uniroot lm coef lowess pnorm
 #' @importFrom dplyr mutate select rename inner_join
+#' @importFrom graphics abline legend lines text
+#' @importFrom grDevices rainbow
+#' @importFrom utils data
+#' @examples
+#' data("TOY_mrna")
+#'
+#' compute_DIIwt(
+#'   DR         = TOY_mrna$DR,
+#'   TPM        = TOY_mrna$TPM,
+#'   genelength = TOY_mrna$genelength
+#' )
 #' @export
 
-get_DIIwt <- function(DR, alpha=2, cutoff=3, TPM, thru=5, pct=40, genelength.mat) {
-
-  if (!identical(colnames(DR), colnames(TPM))) {
-    stop("DR and TPM should have the same samples.")
+compute_DIIwt <- function(DR, alpha=2, cutoff=3, TPM, thr=5, pct=40, genelength) {
+  
+  if (!identical(rownames(DR), rownames(TPM)))
+    stop("DR and TPM must have identical rownames.")
+  
+  if (!identical(colnames(DR), colnames(TPM)))
+    stop("DR and TPM must have identical colnames.")
+  
+  if (!is.numeric(genelength))
+    stop("genelength must be a numeric vector.")
+  
+  if (is.null(names(genelength)))
+    stop("genelength must have gene names.")
+  
+  if (!identical(names(genelength), rownames(DR)))
+    stop("genelength must have same names and order as DR.")
+  
+  # Remove genes if NAs in DR
+  na_rows <- rowSums(is.na(DR)) > 0
+  if (any(na_rows)) {
+    DR  <- DR[!na_rows, , drop=FALSE]
+    TPM <- TPM[!na_rows, , drop=FALSE]
+    genelength <- genelength[!na_rows]
   }
+  
+  # Filter low expressed genes
+  genelist2 <- filter_lowExpGenes(genelist=rownames(DR), TPM, thr, pct)
 
-  DR <- na.omit(DR)
-  genelist2 <- filter_lowExpGenes(genelist=rownames(DR), TPM, thru, pct)
-
-  geneLength <- data.frame(geneid=rownames(genelength.mat), genelength=genelength.mat) %>%
+  geneLength <- data.frame(geneid=names(genelength), genelength=genelength) %>%
     mutate(merged_kb=genelength/1000) %>%
     select(geneid, merged_kb)
 
@@ -327,6 +357,71 @@ get_DIIwt <- function(DR, alpha=2, cutoff=3, TPM, thru=5, pct=40, genelength.mat
            DII=ifelse(PD>cutoff, "Degraded", "Intact")) # outlier detection
 
   return(list(DR2=DR2, ds.vec=ds.vec, gene.df=gene.df, s=s))
+}
+
+
+#' Get a degraded/intact index for samples using gene weight
+#'
+#' @param DR a the number of genes x the number of samples matrix of decay rates
+#' @param alpha a positive numeric exponent factor to weight the magnitude of decay rates. Default is 2.
+#' @param cutoff numeric threshold on projection depth used to classify samples.
+#' @param TPM a numeric matrix of TPM values with the same genes in rows and the same samples in columns as \code{DR}.
+#' @param thr threshold. Default is 5.
+#' @param pct percent. Default is 40.
+#' @param genelength a gene length (bp) vector with names as gene IDs.
+#' @param assay.DR character string specifying the assay name containing the DR matrix in a SummarizedExperiment object.
+#' @param assay.TPM character string specifying the assay name containing the TPM matrix in a SummarizedExperiment object.
+#' @return a matrix of with decay rate with filtered genes; a matrix including a vector of DII; a data frame of gene info; and a scale factor.
+#' @importFrom magrittr %>%
+#' @importFrom stats na.omit median uniroot
+#' @importFrom dplyr mutate select rename inner_join
+#' @examples
+#' data("TOY_mrna")
+#'
+#' get_DIIwt(
+#'   DR         = TOY_mrna$DR,
+#'   TPM        = TOY_mrna$TPM,
+#'   genelength = TOY_mrna$genelength
+#' )
+#' @export
+
+get_DIIwt <- function(DR, alpha=2, cutoff=3, TPM=NULL, thr=5, pct=40, genelength=NULL, assay.DR="DR", assay.TPM="TPM") {
+  
+  if (inherits(DR, "SummarizedExperiment")) {
+    
+    se <- DR
+    DR  <- SummarizedExperiment::assay(se, assay.DR)
+    TPM <- SummarizedExperiment::assay(se, assay.TPM)
+    
+    if (is.null(genelength)) {
+      
+      rd <- SummarizedExperiment::rowData(se)
+      
+      if (!"gene_length" %in% colnames(rd))
+        stop("gene_length not found in rowData(se)")
+      
+      genelength <- rd$gene_length
+      names(genelength) <- rownames(se)
+    }
+  }
+  
+  if (is.null(TPM))
+    stop("TPM must be provided.")
+  
+  if (is.null(genelength))
+    stop("genelength must be provided.")
+  
+  return(
+    compute_DIIwt(
+      DR         = DR,
+      alpha      = alpha,
+      cutoff     = cutoff,
+      TPM        = TPM,
+      thr        = thr,
+      pct        = pct,
+      genelength = genelength
+    )
+  )
 }
 
 
@@ -667,7 +762,7 @@ gen_wCV <- function(Gene, pileupPath, sampleInfo, rnum=100, method=1, winSize=20
 }
 
 
-#' Get a suboptimal/optimal index for samples
+#' Core helper to compute a suboptimal/optimal index
 #'
 #' @param MCD a mean coverage depth is a the number of genes x the number of samples matrix.
 #' @param wCV a window coefficient of variation is a the number of genes x the number of samples matrix.
@@ -678,44 +773,103 @@ gen_wCV <- function(Gene, pileupPath, sampleInfo, rnum=100, method=1, winSize=20
 #' @importFrom magrittr %>%
 #' @importFrom dplyr mutate arrange distinct filter group_by summarise select inner_join
 #' @importFrom ggplot2 ggplot_build geom_smooth geom_rect
+#' @examples
+#' data("TOY_total")
+#'
+#' compute_SOI(
+#'   MCD = TOY_total$MCD,
+#'   wCV = TOY_total$wCV
+#' )
 #' @export
 
-get_SOI <- function(MCD, wCV, rstPct=20, obsPct=50, cutoff=3) {
-
+compute_SOI <- function(MCD, wCV, rstPct=20, obsPct=50, cutoff=3) {
+  
+  if (!identical(rownames(MCD), rownames(wCV)))
+    stop("MCD and wCV must have identical rownames.")
+  
+  if (!identical(colnames(MCD), colnames(wCV)))
+    stop("MCD and wCV must have identical colnames.")
+  
   auc.coord <- stats::na.omit(data.frame(Gene=rep(rownames(MCD), ncol(MCD)),
-                                  Sample=rep(colnames(MCD), each=nrow(MCD)),
-                                  MCD=as.vector(MCD),
-                                  wCV=as.vector(wCV))) %>%
+                                         Sample=rep(colnames(MCD), each=nrow(MCD)),
+                                         MCD=as.vector(MCD),
+                                         wCV=as.vector(wCV))) %>%
     mutate(xMCD=log10(MCD+1)) %>%
     arrange(Sample, xMCD) # sort x-points for AUC
-
+  
   # LOESS regression
   p <- ggplot2::ggplot(auc.coord, aes(x=xMCD, y=wCV)) +
     geom_smooth(data=auc.coord, aes(group=Sample), method="loess", span=obsPct/100, se=FALSE)
   smoothData <- ggplot_build(p)$data[[1]]
-
+  
   # Map back to original group
   group_mapping <- auc.coord %>%
     distinct(Sample)
   group_mapping$group_id <- as.numeric(factor(group_mapping$Sample))
   smoothData <- smoothData %>%
     mutate(Sample=group_mapping$Sample[group])
-
+  
   # Range of MCD
   posMCD <- MCD[MCD>0]
   rangeMin = log10(stats::quantile(posMCD, probs=rstPct/100, na.rm=TRUE)+1)
   rangeMax = log10(stats::quantile(posMCD, probs=1-rstPct/100, na.rm=TRUE)+1)
-
+  
   auc.vec <- smoothData %>%
     filter(x>=rangeMin & x<rangeMax) %>% # restricted MCD
     group_by(Sample) %>%
     summarise(AUC=DescTools::AUC(x, y, method="spline")) %>% # calculate AUC
     mutate(PD=pd.rate.hy(AUC, qrsc=TRUE), # projection depth
            SOI=ifelse(PD>cutoff, "Suboptimal", "Optimal")) # outlier detection
-
+  
   auc.coord <- smoothData %>%
     select(x, y, Sample) %>%
     inner_join(auc.vec, by="Sample")
-
+  
   return(list(auc.vec=auc.vec, auc.coord=auc.coord, rangeMCD=c(rangeMin, rangeMax)))
+}
+
+
+#' Get a suboptimal/optimal index for samples
+#'
+#' @param MCD a mean coverage depth is a the number of genes x the number of samples matrix.
+#' @param wCV a window coefficient of variation is a the number of genes x the number of samples matrix.
+#' @param rstPct restricted percent (one-side) to restrict genes by log transformed MC. Default is 20.
+#' @param obsPct span includes the percent of observations in each local regression. Default is 50.
+#' @param cutoff numeric threshold on projection depth used to classify samples.
+#' @param assay.MCD character string specifying the assay name containing the MCD matrix in a SummarizedExperiment object.
+#' @param assay.wCV character string specifying the assay name containing the wCV matrix in a SummarizedExperiment object.
+#' @return a matrix including a vector of SOI; a coordinate matrix of smoothed data; and a range of MCD.
+#' @importFrom magrittr %>%
+#' @importFrom dplyr mutate arrange distinct filter group_by summarise select inner_join
+#' @importFrom ggplot2 ggplot_build geom_smooth geom_rect
+#' @examples
+#' data("TOY_total")
+#'
+#' get_SOI(
+#'   MCD = TOY_total$MCD,
+#'   wCV = TOY_total$wCV
+#' )
+#' @export
+
+get_SOI <- function(MCD, wCV=NULL, rstPct=20, obsPct=50, cutoff=3, assay.MCD="MCD", assay.wCV="wCV") {
+
+  if (inherits(MCD, "SummarizedExperiment")) {
+    
+    se <- MCD
+    MCD  <- SummarizedExperiment::assay(se, assay.MCD)
+    wCV <- SummarizedExperiment::assay(se, assay.wCV)
+  }
+  
+  if (is.null(wCV))
+    stop("wCV must be provided.")
+  
+  return(
+    compute_SOI(
+      MCD    = MCD,
+      wCV    = wCV,
+      rstPct = rstPct,
+      obsPct = obsPct,
+      cutoff = cutoff
+    )
+  )
 }

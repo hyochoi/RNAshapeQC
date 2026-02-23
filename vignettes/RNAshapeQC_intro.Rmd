@@ -20,6 +20,7 @@ suppressPackageStartupMessages({
   library(BiocStyle)
   library(knitr)
   library(RNAshapeQC)
+  library(SummarizedExperiment)
 })
 
 # Test R functions
@@ -32,14 +33,14 @@ suppressPackageStartupMessages({
 
 # Introduction
 
-_RNAshapeQC_ provides protocol-specific, **RNA coverage-shape-based quality control (QC) metrics**.
+_RNAshapeQC_ provides protocol-specific, **RNA coverage-shape-based quality control (QC) metrics**. This package operates at the gene-level coverage shape rather than isoform-level quantification. Effective transcript length may vary across samples due to alternative splicing. However, we define gene coordinates using union exon regions across annotated transcripts to ensure consistent comparability of coverage profiles across samples.
 
 The package is designed to:
 
-- Construct per-gene pileups from BAM files;
+- Construct per-gene base-level coverage pileups from BAM files;
 - Internally derive exon-only coverage from pileups for downstream QC metrics;
 - Compute shape-based QC metrics using:
-  - decay rate for mRNA-seq,
+  - decay rate and gene weight for mRNA-seq,
   - mean coverage depth and window coefficient of variation for total RNA-seq;
 - Derive sample-level quality indices:
   - degraded/intact index,
@@ -95,7 +96,7 @@ library(RNAshapeQC)
 
 Two toy objects are shipped with the package:
 
-- `TOY_mrna`: synthetic mRNA-seq-like data (`DR`, `TPM`, and `genelength.mat` matrices)
+- `TOY_mrna`: synthetic mRNA-seq-like data (`DR` and `TPM` matrices, and `genelength` vector)
 - `TOY_total`: synthetic total RNA-seq-like data (`MCD` and `wCV` matrices)
 
 ```{r LoadData}
@@ -126,15 +127,36 @@ For mRNA-seq data, _RNAshapeQC_ uses the PD of DS as a sample-level degradation 
 We can derive the DII using gene weights via `get_DIIwt()` with the toy objects:
 
 ```{r get_DIIwt}
+# Input case 1: matrix/vector
 res_dii <- get_DIIwt(
-  DR             = TOY_mrna$DR, 
-  TPM            = TOY_mrna$TPM, 
-  genelength.mat = TOY_mrna$genelength.mat
+  DR         = TOY_mrna$DR, 
+  TPM        = TOY_mrna$TPM, 
+  genelength = TOY_mrna$genelength
 )
+
+# Input case 2: SE
+TOY_mrna_se <- SummarizedExperiment(
+  assays = list(
+    DR  = TOY_mrna$DR,
+    TPM = TOY_mrna$TPM
+  ),
+  rowData = DataFrame(
+    gene_length = TOY_mrna$genelength
+  )
+)
+res_dii_se <- get_DIIwt(TOY_mrna_se)
+
+# Compare matrix and SE inputs
+all.equal(res_dii$DR2, res_dii_se$DR2)
+all.equal(res_dii$ds.vec, res_dii_se$ds.vec)
+all.equal(res_dii$gene.df, res_dii_se$gene.df)
+all.equal(res_dii$s, res_dii_se$s)
 
 names(res_dii)
 head(res_dii$ds.vec)
 ```
+
+When a `SummarizedExperiment` object is supplied, `get_DIIwt()` extracts the required assays and row-level metadata internally. As shown above, results obtained from matrix/vector input and `SummarizedExperiment` input are identical.
 
 The returned list typically includes:
 
@@ -178,6 +200,7 @@ For total RNA-seq data, _RNAshapeQC_ focuses on the relationship between MCD and
 We can combine these metrics to measure coverage-shape optimality using `get_SOI()`:
 
 ```{r get_SOI}
+# Input case 1: matrix
 # The cutoff value can be chosen by inspecting the PD distribution.
 res_soi <- get_SOI(
   MCD    = TOY_total$MCD,
@@ -185,9 +208,25 @@ res_soi <- get_SOI(
   cutoff = 1
 )
 
+# Input case 2: SE
+TOY_total_se <- SummarizedExperiment(
+  assays = list(
+    MCD = TOY_total$MCD,
+    wCV = TOY_total$wCV
+  )
+)
+res_soi_se <- get_SOI(TOY_total_se, cutoff=1)
+
+# Compare matrix and SE inputs
+all.equal(res_soi$auc.vec, res_soi_se$auc.vec)
+all.equal(res_soi$auc.coord, res_soi_se$auc.coord)
+all.equal(res_soi$rangeMCD, res_soi_se$rangeMCD)
+
 names(res_soi)
 head(res_soi$auc.vec)
 ```
+
+The results obtained from matrix input and `SummarizedExperiment` input are identical, and it confirms consistent behavior of `get_SOI()` across supported input types.
 
 Here, `auc.vec` contains:
 

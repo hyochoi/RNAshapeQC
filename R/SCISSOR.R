@@ -119,7 +119,7 @@ find.exon.hy <- function(exon,is.intron=FALSE,num.intron=NULL){
         new.ep <- ep3 + c(0,cumsum(ep3[1:(nrow(ep3)-1),4]));
         overlap.id.2 <- which(new.ep[1:(nrow(new.ep)-1),4]>new.ep[2:nrow(new.ep),2]) ;
         if (length(overlap.id.2)>0){
-          print(paste("!!!! Warning: Some exons and introns are overlapped!!!!  Overlapped at:  ",overlap.id.2))
+          warning(paste("!!!! Warning: Some exons and introns are overlapped!!!!  Overlapped at:  ",overlap.id.2))
         }
       } else {
         ep2[nrow(ep2),4] <- ep2[nrow(ep2),3];
@@ -308,7 +308,7 @@ process_pileup <- function(pileupData,Ranges,
 
   # Center and normalize data
   data.normalized = normalize_data(inputData=data.log$outputData,
-                                   pileup=pileupData,Ranges=Ranges,
+                                   pileupData=pileupData,Ranges=Ranges,
                                    makePlot=plotNormalization, ...)
 
   readconstr=20
@@ -475,7 +475,7 @@ ADstatWins.hy <- function(x,trim=NULL){
 ADstat.hy <- function(x){
   n = length(x);
   if (n < 7){
-    return(print("Sample size must be greater than 7"));
+    stop("Sample size must be greater than 7")
   } else {
     xs = sort(x);
     f = pnorm(xs,mean(xs),sd(xs));
@@ -494,7 +494,7 @@ scale.factor <- function(X,average="mean",trim=0.1,adjval=NULL,robustLM=FALSE) {
   mean.vec = apply(X,1,FUN=function(x){adj.center(x,average=average,trim=trim,adjval=adjval)})
   if (sum(mean.vec^2)>0) {
     if (robustLM) {
-      msf = apply(X,2,FUN=function(x){MASS::rlm(x ~ mean.vec - 1,psi=psi.bisquare)$coefficients})
+      msf = apply(X,2,FUN=function(x){MASS::rlm(x ~ mean.vec - 1,psi=MASS::psi.bisquare)$coefficients})
       if (length(which(is.na(msf)==1))>0) {
         temp_id=which(is.na(msf))
         msf[temp_id]=as.vector(t(mean.vec)%*%X[,temp_id]/(sum(mean.vec^2)))
@@ -568,8 +568,8 @@ normalize_data <- function(inputData,
 
   ## loop until no different variations
   if (sum((g1.offset$g-1)^2)<1e-10) {
-    cat("No adjustment applied. Data do not have enough expression.","\n")
-    cat("........Plots are omitted.","\n")
+    message("No adjustment applied. Data do not have enough expression.")
+    message("Plots are omitted.")
     g2.offset=g1.offset
   } else {
     g2.offset = g1.offset
@@ -960,4 +960,21 @@ rhoHuber <- function(x,c=2.1){
   rho = (x/c)^2
   rho[rho > 1] = 1
   1.54^2*rho
+}
+
+
+#' @references https://github.com/hyochoi/SCISSOR/blob/master/R/bisquare.sse.R
+#' @noRd
+
+bisquare.sse <- function(x) {
+  sig0 = sd(x)
+  if (sig0<1e-10) {
+    return(0)
+  } else {
+    k = 4.685*sig0
+    c = (k^2)/6
+    bx = rep(c, length(x))
+    bx[which(abs(x) <= k)] = c*(1-((1-((bx[which(abs(x) <= k)]/k)^2))^3))
+    return(sum(bx))
+  }
 }

@@ -18,8 +18,7 @@ A list with 6 components:
     here \code{"mRNA-seq"}.}
   \item{TPM}{A numeric matrix of TPM values; same dimension and dimnames
     as \code{DR}.}
-  \item{genelength.mat}{A one-column numeric matrix of gene lengths (bp),
-    with row names matching the row names of \code{DR}.}
+  \item{genelength}{A gene length (bp) vector with names matching the row names of \code{DR}.}
 }
 }
 \usage{

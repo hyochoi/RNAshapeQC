@@ -19,6 +19,13 @@ a numeric matrix of exon-only coverage (rows: exon positions, columns: samples).
 \description{
 Core helper to build exon-only pileup
 }
+\examples{
+## Requires a base-level coverage pileup .RData file
+try(
+  .build_pileupExon(pileupPath = "path/to/pileup.RData"),
+  silent = TRUE
+)
+}
 \references{
 Choi, H.Y., Jo, H., Zhao, X. et al. SCISSOR: a framework for identifying structural changes in RNA transcripts. Nat Commun 12, 286 (2021).
 }
