@@ -1,6 +1,6 @@
 ---
 title: "RNAshapeQC: Quick Start Tutorial"
-author: "Miyeon Yeon and Won-Young Choi"
+author: "Miyeon Yeon, Won-Young Choi, and Hyo Young Choi"
 date: "`r Sys.Date()`"
 output: BiocStyle::html_document
 vignette: >
