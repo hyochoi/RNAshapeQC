@@ -1,7 +1,7 @@
 Package: RNAshapeQC
 Type: Package
 Title: RNA Coverage-Shape-Based Quality Control Metrics
-Version: 0.99.6
+Version: 0.99.7
 Authors@R: 
     c(
       person("Miyeon", "Yeon",
@@ -74,7 +74,8 @@ Suggests:
     RColorBrewer,
     scales,
     tibble,
-    patchwork
+    patchwork,
+    ConsensusClusterPlus
 biocViews: 
     RNASeq,
     QualityControl,

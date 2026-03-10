@@ -36,10 +36,7 @@ a matrix including a vector of SOI; a coordinate matrix of smoothed data; and a 
 Get a suboptimal/optimal index for samples
 }
 \examples{
-data("TOY_total")
+data("TOY_total_se")
 
-get_SOI(
-  MCD = TOY_total$MCD,
-  wCV = TOY_total$wCV
-)
+get_SOI(TOY_total_se)
 }

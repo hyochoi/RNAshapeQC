@@ -180,17 +180,13 @@ plot_GBCos <- function(stat=2, plot=TRUE, sampleInfo, GBCresult, auc.vec) {
 #' @importFrom grDevices png dev.off
 #' @importFrom ggplot2 margin
 #' @examples
-#' data("TOY_mrna")
+#' data("TOY_mrna_se")
 #'
-#' res <- get_DIIwt(
-#'   DR         = TOY_mrna$DR,
-#'   TPM        = TOY_mrna$TPM,
-#'   genelength = TOY_mrna$genelength
-#' )
+#' res <- get_DIIwt(TOY_mrna_se)
 #'
 #' try(
 #'   plot_DIIwt(
-#'     DR        = TOY_mrna$DR,
+#'     DR        = TOY_mrna_se$DR,
 #'     DIIresult = res,
 #'     outFile   = tempfile(fileext=".png")
 #'   ),
@@ -408,12 +404,9 @@ plot_DIIwt <- function(DR, DIIresult, cutoff=3, outFile=NULL) {
 #' @importFrom ggplot2 geom_line scale_color_manual xlab ylab coord_cartesian
 #' @importFrom ggplot2 margin
 #' @examples
-#' data("TOY_total")
+#' data("TOY_total_se")
 #'
-#' res <- get_SOI(
-#'   MCD = TOY_total$MCD,
-#'   wCV = TOY_total$wCV
-#' )
+#' res <- get_SOI(TOY_total_se)
 #'
 #' plot_SOI(
 #'   SOIresult = res,

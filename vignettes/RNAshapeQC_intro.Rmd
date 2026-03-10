@@ -21,6 +21,7 @@ suppressPackageStartupMessages({
   library(knitr)
   library(RNAshapeQC)
   library(SummarizedExperiment)
+  library(ConsensusClusterPlus)
 })
 
 # Test R functions
@@ -33,7 +34,7 @@ suppressPackageStartupMessages({
 
 # Introduction
 
-_RNAshapeQC_ provides protocol-specific, **RNA coverage-shape-based quality control (QC) metrics**. This package operates at the gene-level coverage shape rather than isoform-level quantification. Effective transcript length may vary across samples due to alternative splicing. However, we define gene coordinates using union exon regions across annotated transcripts to ensure consistent comparability of coverage profiles across samples.
+_RNAshapeQC_ provides protocol-specific, **RNA coverage-shape-based quality control (QC) metrics**. This package operates at the gene-level coverage shape rather than isoform-level quantification. Effective transcript length may vary across samples due to alternative splicing. However, we define gene coordinates using the union of exon regions across annotated transcripts to ensure consistent comparability of coverage profiles across samples.
 
 The package is designed to:
 
@@ -94,69 +95,58 @@ For detailed method descriptions and extended examples, please refer to the **ex
 library(RNAshapeQC)
 ```
 
-Two toy objects are shipped with the package:
+Two primary toy objects are shipped with the package:
 
-- `TOY_mrna`: synthetic mRNA-seq-like data (`DR` and `TPM` matrices, and `genelength` vector)
-- `TOY_total`: synthetic total RNA-seq-like data (`MCD` and `wCV` matrices)
+- `TOY_mrna_se`: synthetic mRNA-seq-like data (`DR` and `TPM` are stored as assays, and `gene_length` is stored in `rowData()`.)
+- `TOY_total_se`: synthetic total RNA-seq-like data (`MCD` and `wCV` are stored as assays.)
+
+_RNAshapeQC_ functions support direct input of `SummarizedExperiment` objects, which is the recommended Bioconductor container format. Optionally, examples in [Section 3](#mRNAex) and [Section 4](#totalRNAex) also demonstrate usage with matrix inputs (`TOY_mrna_mat` and `TOY_total_mat`). The resulting `SummarizedExperiment` objects from _RNAshapeQC_ outputs can be directly integrated into standard Bioconductor workflows as examples in [Section 5](#interoper).
 
 ```{r LoadData}
-data("TOY_mrna")
-data("TOY_total")
+data("TOY_mrna_se")
+data("TOY_total_se")
 ```
-
-Each object is a simple list with:
-
-- `genes`: character vector of gene IDs
-- `samples`: character vector of sample IDs
 
 We can quickly inspect the structure as follows:
 
 ```{r Str}
-str(TOY_mrna)
-
-str(TOY_total)
+TOY_mrna_se
+TOY_total_se
 ```
 
 
 
 
-# mRNA-seq Example
+# mRNA-seq Example {#mRNAex}
 
 For mRNA-seq data, _RNAshapeQC_ uses the PD of DS as a sample-level degradation metric.
 
 We can derive the DII using gene weights via `get_DIIwt()` with the toy objects:
 
 ```{r get_DIIwt}
-# Input case 1: matrix/vector
-res_dii <- get_DIIwt(
-  DR         = TOY_mrna$DR, 
-  TPM        = TOY_mrna$TPM, 
-  genelength = TOY_mrna$genelength
-)
-
-# Input case 2: SE
-TOY_mrna_se <- SummarizedExperiment(
-  assays = list(
-    DR  = TOY_mrna$DR,
-    TPM = TOY_mrna$TPM
-  ),
-  rowData = DataFrame(
-    gene_length = TOY_mrna$genelength
-  )
-)
+# Using SE input directly
 res_dii_se <- get_DIIwt(TOY_mrna_se)
 
-# Compare matrix and SE inputs
-all.equal(res_dii$DR2, res_dii_se$DR2)
-all.equal(res_dii$ds.vec, res_dii_se$ds.vec)
-all.equal(res_dii$gene.df, res_dii_se$gene.df)
-all.equal(res_dii$s, res_dii_se$s)
+names(res_dii_se)
+head(res_dii_se$ds.vec)
 
-names(res_dii)
-head(res_dii$ds.vec)
+# (Optional) Using matrix/vector input
+data(TOY_mrna_mat)
+
+res_dii_mat <- get_DIIwt(
+  DR         = TOY_mrna_mat$DR, 
+  TPM        = TOY_mrna_mat$TPM, 
+  genelength = TOY_mrna_mat$gene_length
+)
+
+# Compare SE and matrix inputs
+all.equal(res_dii_se$DR2,     res_dii_mat$DR2)
+all.equal(res_dii_se$ds.vec,  res_dii_mat$ds.vec)
+all.equal(res_dii_se$gene.df, res_dii_mat$gene.df)
+all.equal(res_dii_se$s,       res_dii_mat$s)
 ```
 
-When a `SummarizedExperiment` object is supplied, `get_DIIwt()` extracts the required assays and row-level metadata internally. As shown above, results obtained from matrix/vector input and `SummarizedExperiment` input are identical.
+When a `SummarizedExperiment` object is supplied, `get_DIIwt()` extracts the required assays and row-level metadata internally. As shown above, results obtained from `SummarizedExperiment` input and matrix/vector input are identical.
 
 The returned list typically includes:
 
@@ -176,8 +166,8 @@ We can plot the distributions of DS and PD, as well as the heatmap of DR with ge
 outfile <- file.path(tempdir(), "Fig_DIIwt.png")
 
 plot_DIIwt(
-  DR        = res_dii$DR2,
-  DIIresult = res_dii,
+  DR        = res_dii_se$DR2,
+  DIIresult = res_dii_se,
   outFile   = outfile
 )
 
@@ -193,40 +183,36 @@ knitr::include_graphics(outfile)
 
 
 
-# Total RNA-seq Example
+# Total RNA-seq Example {#totalRNAex}
 
 For total RNA-seq data, _RNAshapeQC_ focuses on the relationship between MCD and wCV. 
 
 We can combine these metrics to measure coverage-shape optimality using `get_SOI()`:
 
 ```{r get_SOI}
-# Input case 1: matrix
+# Using SE input directly
+res_soi_se <- get_SOI(TOY_total_se, cutoff=1)
+
+names(res_soi_se)
+head(res_soi_se$auc.vec)
+
+# (Optional) Using matrix input
 # The cutoff value can be chosen by inspecting the PD distribution.
-res_soi <- get_SOI(
-  MCD    = TOY_total$MCD,
-  wCV    = TOY_total$wCV,
+data(TOY_total_mat)
+
+res_soi_mat <- get_SOI(
+  MCD    = TOY_total_mat$MCD,
+  wCV    = TOY_total_mat$wCV,
   cutoff = 1
 )
 
-# Input case 2: SE
-TOY_total_se <- SummarizedExperiment(
-  assays = list(
-    MCD = TOY_total$MCD,
-    wCV = TOY_total$wCV
-  )
-)
-res_soi_se <- get_SOI(TOY_total_se, cutoff=1)
-
-# Compare matrix and SE inputs
-all.equal(res_soi$auc.vec, res_soi_se$auc.vec)
-all.equal(res_soi$auc.coord, res_soi_se$auc.coord)
-all.equal(res_soi$rangeMCD, res_soi_se$rangeMCD)
-
-names(res_soi)
-head(res_soi$auc.vec)
+# Compare SE and matrix inputs
+all.equal(res_soi_se$auc.vec,   res_soi_mat$auc.vec)
+all.equal(res_soi_se$auc.coord, res_soi_mat$auc.coord)
+all.equal(res_soi_se$rangeMCD,  res_soi_mat$rangeMCD)
 ```
 
-The results obtained from matrix input and `SummarizedExperiment` input are identical, and it confirms consistent behavior of `get_SOI()` across supported input types.
+The results obtained from `SummarizedExperiment` input and matrix input are identical, and it confirms consistent behavior of `get_SOI()` across supported input types.
 
 Here, `auc.vec` contains:
 
@@ -244,7 +230,7 @@ outfile <- file.path(tempdir(), "Fig_SOI.png")
 
 # The cutoff value can be chosen by inspecting the PD distribution.
 plot_SOI(
-  SOIresult = res_soi,
+  SOIresult = res_soi_se,
   cutoff    = 1,
   outFile   = outfile 
 )
@@ -261,63 +247,80 @@ knitr::include_graphics(outfile)
 
 
 
-# Interoperability with Bioconductor
+# Interoperability with Bioconductor {#interoper}
 
-_RNAshapeQC_ outputs can be organized using the [_SummarizedExperiment_](https://bioconductor.org/packages/devel/bioc/vignettes/SummarizedExperiment/inst/doc/SummarizedExperiment.html) class, which ensures consistent handling of assay and associated meta-data during subsetting. In the container, matrices of DR, MCD, and wCV are stored as `assays()`, where rows denote genes and columns represent samples. The gene or sample information tables (annotations) are stored using the `rowData()` and `colData()` functions, respectively. `metadata()` can contain additional QC-related information such as scale factors, MCD ranges, and cutoff values. 
+_RNAshapeQC_ outputs can be organized using the [_SummarizedExperiment_](https://bioconductor.org/packages/devel/bioc/vignettes/SummarizedExperiment/inst/doc/SummarizedExperiment.html) class, which ensures consistent handling of assay and associated meta-data during subsetting. In the container, matrices of DR, TPM, MCD, and wCV can be stored as `assays()`, where rows denote genes and columns represent samples. The gene or sample information tables (annotations) are stored using the `rowData()` or `colData()` functions, respectively. `metadata()` can contain additional QC-related information such as scale factors, MCD ranges, and cutoff values. 
 
-This is an example of constructing `SummarizedExperiment` objects and applying sample-level QCs to filter out low-quality samples before downstream analysis. This coordinated subsetting operation is simultaneously applied to both assays and column data, allowing proper filtering and preventing mismatches between QC metrics and downstream analysis inputs, as shown in `se_total_hq`.
+This is an example of constructing `SummarizedExperiment` objects and applying sample-level QCs to filter out low-quality samples before downstream analysis. This coordinated subsetting operation is simultaneously applied to both assays and column data, allowing proper filtering and preventing mismatches between QC metrics and downstream analysis inputs, as shown in `se_mrna_hq` and `se_total_hq`.
 
-```{r se, message=FALSE, echo=TRUE}
+```{r se_mrna, message=FALSE, echo=TRUE}
 library(SummarizedExperiment)
 
-# mRNA-seq
-stopifnot(
-  identical(rownames(res_dii$DR2), rownames(res_dii$gene.df)),
-  identical(colnames(res_dii$DR2), res_dii$ds.vec$Sample)
-)
-
+# Store QC results in mRNA-seq
 se_mrna <- SummarizedExperiment(
   assays = list(
-    DR = res_dii$DR2
+    DR = assay(TOY_mrna_se, "DR"),
+    TPM = assay(TOY_mrna_se, "TPM")
   ),
-  rowData = res_dii$gene.df,
-  colData = res_dii$ds.vec,
+  colData = DataFrame(res_dii_se$ds.vec),
   metadata = list(
-    DR_ver = "v2 (low expressed genes filtered)",
-    s = res_dii$s
+    s = res_dii_se$s
   )
 )
 se_mrna
 
-# Total RNA-seq
-stopifnot(
-  identical(rownames(TOY_total$MCD), rownames(TOY_total$wCV)),
-  identical(colnames(TOY_total$MCD), res_soi$auc.vec$Sample),
-  identical(colnames(TOY_total$wCV), res_soi$auc.vec$Sample)
-)
+# Subsetting to keep high-quality samples in mRNA-seq
+se_mrna_hq <- se_mrna[, se_mrna$DII=="Intact"]
+head(assay(se_mrna_hq, "TPM"))
+```
 
+This QC filtering can be applied prior to class discovery to reduce clustering instability caused by degraded samples.
+
+```{r CC, message=FALSE, echo=TRUE}
+library(ConsensusClusterPlus)
+
+# TPM log transform
+tpm_hq  <- log2(assay(se_mrna_hq, "TPM") + 1)
+
+# Set a random seed for reproducibility
+set.seed(1)
+
+cc <- ConsensusClusterPlus(
+  tpm_hq,
+  maxK = 6,
+  reps = 100,
+  pItem = 0.8,
+  pFeature = 0.8,
+  clusterAlg = "hc",
+  distance = "pearson",
+  plot = "png",
+  title = tempdir()
+)
+cc[[3]]$consensusClass
+```
+
+The protocol-specific QC metrics stored in `colData()` can be included as covariates in a differential expression analysis ([_DESeq2_](https://bioconductor.org/packages/release/bioc/vignettes/DESeq2/inst/doc/DESeq2.html)) (e.g., `design = ~ batch + condition + SOI`).
+
+```{r se_total, message=FALSE, echo=TRUE}
+# Store QC results in total RNA-seq
 se_total <- SummarizedExperiment(
   assays = list(
-    MCD = TOY_total$MCD,
-    wCV = TOY_total$wCV
+    MCD = assay(TOY_total_se, "MCD"),
+    wCV = assay(TOY_total_se, "wCV")
   ),
-  rowData = DataFrame(Gene = rownames(TOY_total$MCD)),
-  colData = res_soi$auc.vec,
+  rowData = DataFrame(Gene = rownames(assay(TOY_total_se, "MCD"))),
+  colData = res_soi_se$auc.vec,
   metadata = list(
-    auc.coord = res_soi$auc.coord,
-    rangeMCD = res_soi$rangeMCD
+    auc.coord = res_soi_se$auc.coord,
+    rangeMCD  = res_soi_se$rangeMCD
   )
 )
 se_total
 
 # Subsetting to keep high-quality samples in total RNA-seq
 se_total_hq <- se_total[, se_total$SOI=="Optimal"]
-# head(assay(se_total_hq, "MCD"))
 head(assay(se_total_hq, "wCV"))
-colData(se_total_hq)
 ```
-
-The resulting `SummarizedExperiment` objects from _RNAshapeQC_ outputs can be directly integrated into standard Bioconductor workflows. Specifically, the protocol-specific QC metrics stored in `colData()` can be used for filtering or included as covariates in a differential expression analysis ([_DESeq2_](https://bioconductor.org/packages/release/bioc/vignettes/DESeq2/inst/doc/DESeq2.html)) (e.g., `design = ~ batch + condition + SOI`).
 
 
 
@@ -410,7 +413,7 @@ _RNAshapeQC_ distinguishes between two types of functions for computing QC metri
 
 This vignette demonstrated a minimal, runnable example of how to:
 
-- load toy QC datasets (`TOY_mrna`, `TOY_total`),
+- load toy `SummarizedExperiment` datasets (`TOY_mrna_se` and `TOY_total_se`),
 - use `get_DIIwt()` to derive a degraded/intact index from DR,
 - use `get_SOI()` to derive a suboptimal/optimal index from MCD and wCV,
 - understand how `construct_pileup()` fits into a real BAM → coverage → QC workflow.

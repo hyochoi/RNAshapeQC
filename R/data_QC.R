@@ -105,14 +105,14 @@ compute_DR <- function(pileupData, exonRanges, sampleInfo, cases=NULL, logshiftV
 #' ## This example demonstrates the function interface only.
 #' ## Meaningful results require coverage pileup files generated
 #' ## from BAM files (see vignette for a full workflow).
-#' data("TOY_mrna")
+#' data("TOY_mrna_mat")
 #'
 #' ## Interface-only example (no meaningful output is produced)
 #' try(
 #'   get_DR(
-#'     genelist   = TOY_mrna$genes,
-#'     pileupPath = rep(NA, length(TOY_mrna$genes)),
-#'     sampleInfo = data.frame(SampleID=TOY_mrna$samples),
+#'     genelist   = TOY_mrna_mat$genes,
+#'     pileupPath = rep(NA, length(TOY_mrna_mat$genes)),
+#'     sampleInfo = data.frame(SampleID=TOY_mrna_mat$samples),
 #'     nCores = 1
 #'   ),
 #'   silent = TRUE
@@ -223,8 +223,8 @@ gen_DR <- function(Gene, pileupPath, sampleInfo, cases=NULL, Study=NULL, outFile
 #' @importFrom dplyr group_by summarise arrange mutate left_join select
 #' @importFrom stats na.omit dist hclust as.dendrogram
 #' @examples
-#' data("TOY_mrna")
-#' get_DIIhc(DR = TOY_mrna$DR)
+#' data("TOY_mrna_mat")
+#' get_DIIhc(DR = TOY_mrna_mat$DR)
 #' @export
 
 get_DIIhc <- function(DR, topPct=5) {
@@ -275,12 +275,12 @@ get_DIIhc <- function(DR, topPct=5) {
 #' @importFrom grDevices rainbow
 #' @importFrom utils data
 #' @examples
-#' data("TOY_mrna")
+#' data("TOY_mrna_mat")
 #'
 #' compute_DIIwt(
-#'   DR         = TOY_mrna$DR,
-#'   TPM        = TOY_mrna$TPM,
-#'   genelength = TOY_mrna$genelength
+#'   DR         = TOY_mrna_mat$DR,
+#'   TPM        = TOY_mrna_mat$TPM,
+#'   genelength = TOY_mrna_mat$gene_length
 #' )
 #' @export
 
@@ -376,13 +376,9 @@ compute_DIIwt <- function(DR, alpha=2, cutoff=3, TPM, thr=5, pct=40, genelength)
 #' @importFrom stats na.omit median uniroot
 #' @importFrom dplyr mutate select rename inner_join
 #' @examples
-#' data("TOY_mrna")
+#' data("TOY_mrna_se")
 #'
-#' get_DIIwt(
-#'   DR         = TOY_mrna$DR,
-#'   TPM        = TOY_mrna$TPM,
-#'   genelength = TOY_mrna$genelength
-#' )
+#' get_DIIwt(TOY_mrna_se)
 #' @export
 
 get_DIIwt <- function(DR, alpha=2, cutoff=3, TPM=NULL, thr=5, pct=40, genelength=NULL, assay.DR="DR", assay.TPM="TPM") {
@@ -486,14 +482,14 @@ compute_MCD <- function(pileupData, sampleInfo, cases=NULL) {
 #' ## This example demonstrates the function interface only.
 #' ## Meaningful results require coverage pileup files generated
 #' ## from BAM files (see vignette for a full workflow).
-#' data("TOY_total")
+#' data("TOY_total_mat")
 #'
 #' ## Interface-only example (no meaningful output is produced)
 #' try(
 #'   get_MCD(
-#'     genelist   = TOY_total$genes,
-#'     pileupPath = rep(NA, length(TOY_total$genes)),
-#'     sampleInfo = data.frame(SampleID=TOY_total$samples),
+#'     genelist   = TOY_total_mat$genes,
+#'     pileupPath = rep(NA, length(TOY_total_mat$genes)),
+#'     sampleInfo = data.frame(SampleID=TOY_total_mat$samples),
 #'     nCores = 1
 #'   ),
 #'   silent = TRUE
@@ -660,14 +656,14 @@ compute_wCV <- function(pileupData, sampleInfo, rnum=100, method=1, winSize=20, 
 #' ## This example demonstrates the function interface only.
 #' ## Meaningful results require coverage pileup files generated
 #' ## from BAM files (see vignette for a full workflow).
-#' data("TOY_total")
+#' data("TOY_total_mat")
 #'
 #' ## Interface-only example (no meaningful output is produced)
 #' try(
 #'   get_wCV(
-#'     genelist   = TOY_total$genes,
-#'     pileupPath = rep(NA, length(TOY_total$genes)),
-#'     sampleInfo = data.frame(SampleID=TOY_total$samples),
+#'     genelist   = TOY_total_mat$genes,
+#'     pileupPath = rep(NA, length(TOY_total_mat$genes)),
+#'     sampleInfo = data.frame(SampleID=TOY_total_mat$samples),
 #'     nCores = 1
 #'   ),
 #'   silent = TRUE
@@ -774,11 +770,11 @@ gen_wCV <- function(Gene, pileupPath, sampleInfo, rnum=100, method=1, winSize=20
 #' @importFrom dplyr mutate arrange distinct filter group_by summarise select inner_join
 #' @importFrom ggplot2 ggplot_build geom_smooth geom_rect
 #' @examples
-#' data("TOY_total")
+#' data("TOY_total_mat")
 #'
 #' compute_SOI(
-#'   MCD = TOY_total$MCD,
-#'   wCV = TOY_total$wCV
+#'   MCD = TOY_total_mat$MCD,
+#'   wCV = TOY_total_mat$wCV
 #' )
 #' @export
 
@@ -843,12 +839,9 @@ compute_SOI <- function(MCD, wCV, rstPct=20, obsPct=50, cutoff=3) {
 #' @importFrom dplyr mutate arrange distinct filter group_by summarise select inner_join
 #' @importFrom ggplot2 ggplot_build geom_smooth geom_rect
 #' @examples
-#' data("TOY_total")
+#' data("TOY_total_se")
 #'
-#' get_SOI(
-#'   MCD = TOY_total$MCD,
-#'   wCV = TOY_total$wCV
-#' )
+#' get_SOI(TOY_total_se)
 #' @export
 
 get_SOI <- function(MCD, wCV=NULL, rstPct=20, obsPct=50, cutoff=3, assay.MCD="MCD", assay.wCV="wCV") {

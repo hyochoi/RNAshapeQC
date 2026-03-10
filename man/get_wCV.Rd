@@ -46,14 +46,14 @@ Get a window coefficient of variation for genes and samples (for a genelist)
 ## This example demonstrates the function interface only.
 ## Meaningful results require coverage pileup files generated
 ## from BAM files (see vignette for a full workflow).
-data("TOY_total")
+data("TOY_total_mat")
 
 ## Interface-only example (no meaningful output is produced)
 try(
   get_wCV(
-    genelist   = TOY_total$genes,
-    pileupPath = rep(NA, length(TOY_total$genes)),
-    sampleInfo = data.frame(SampleID=TOY_total$samples),
+    genelist   = TOY_total_mat$genes,
+    pileupPath = rep(NA, length(TOY_total_mat$genes)),
+    sampleInfo = data.frame(SampleID=TOY_total_mat$samples),
     nCores = 1
   ),
   silent = TRUE

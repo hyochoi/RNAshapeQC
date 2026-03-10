@@ -28,14 +28,14 @@ Get a decay rate for genes and samples (for a genelist)
 ## This example demonstrates the function interface only.
 ## Meaningful results require coverage pileup files generated
 ## from BAM files (see vignette for a full workflow).
-data("TOY_mrna")
+data("TOY_mrna_mat")
 
 ## Interface-only example (no meaningful output is produced)
 try(
   get_DR(
-    genelist   = TOY_mrna$genes,
-    pileupPath = rep(NA, length(TOY_mrna$genes)),
-    sampleInfo = data.frame(SampleID=TOY_mrna$samples),
+    genelist   = TOY_mrna_mat$genes,
+    pileupPath = rep(NA, length(TOY_mrna_mat$genes)),
+    sampleInfo = data.frame(SampleID=TOY_mrna_mat$samples),
     nCores = 1
   ),
   silent = TRUE

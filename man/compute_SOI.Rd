@@ -24,10 +24,10 @@ a matrix including a vector of SOI; a coordinate matrix of smoothed data; and a 
 Core helper to compute a suboptimal/optimal index
 }
 \examples{
-data("TOY_total")
+data("TOY_total_mat")
 
 compute_SOI(
-  MCD = TOY_total$MCD,
-  wCV = TOY_total$wCV
+  MCD = TOY_total_mat$MCD,
+  wCV = TOY_total_mat$wCV
 )
 }

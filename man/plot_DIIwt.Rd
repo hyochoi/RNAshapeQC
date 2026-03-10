@@ -22,17 +22,13 @@ figures for the distribution of DII by PD; and the heatmap of DR.
 Plot degraded/intact index outputs
 }
 \examples{
-data("TOY_mrna")
+data("TOY_mrna_se")
 
-res <- get_DIIwt(
-  DR         = TOY_mrna$DR,
-  TPM        = TOY_mrna$TPM,
-  genelength = TOY_mrna$genelength
-)
+res <- get_DIIwt(TOY_mrna_se)
 
 try(
   plot_DIIwt(
-    DR        = TOY_mrna$DR,
+    DR        = TOY_mrna_se$DR,
     DIIresult = res,
     outFile   = tempfile(fileext=".png")
   ),

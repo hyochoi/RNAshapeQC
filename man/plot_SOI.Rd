@@ -20,12 +20,9 @@ figures for the distribution of SOI by PD; and the relation of wCV and MCD.
 Plot suboptimal/optimal index outputs
 }
 \examples{
-data("TOY_total")
+data("TOY_total_se")
 
-res <- get_SOI(
-  MCD = TOY_total$MCD,
-  wCV = TOY_total$wCV
-)
+res <- get_SOI(TOY_total_se)
 
 plot_SOI(
   SOIresult = res,

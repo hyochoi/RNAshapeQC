@@ -42,11 +42,7 @@ a matrix of with decay rate with filtered genes; a matrix including a vector of 
 Get a degraded/intact index for samples using gene weight
 }
 \examples{
-data("TOY_mrna")
+data("TOY_mrna_se")
 
-get_DIIwt(
-  DR         = TOY_mrna$DR,
-  TPM        = TOY_mrna$TPM,
-  genelength = TOY_mrna$genelength
-)
+get_DIIwt(TOY_mrna_se)
 }

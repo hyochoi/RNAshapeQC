@@ -18,6 +18,6 @@ a matrix of binary converted decay rates; hierarchical clustering outputs of sam
 Get a degraded/intact index for samples using hierarchical clustering
 }
 \examples{
-data("TOY_mrna")
-get_DIIhc(DR = TOY_mrna$DR)
+data("TOY_mrna_mat")
+get_DIIhc(DR = TOY_mrna_mat$DR)
 }

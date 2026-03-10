@@ -433,10 +433,10 @@ extract_pileupExon <- function(Gene, pileupPath, cases=NULL, Study=NULL) {
 #' @param pct percent. Default is 40.
 #' @return a vector of filtered gene names
 #' @examples
-#' data("TOY_mrna")
+#' data("TOY_mrna_mat")
 #' filter_lowExpGenes(
-#'   genelist = TOY_mrna$genes,
-#'   TPM      = TOY_mrna$TPM
+#'   genelist = TOY_mrna_mat$genes,
+#'   TPM      = TOY_mrna_mat$TPM
 #' )
 #' @export
 

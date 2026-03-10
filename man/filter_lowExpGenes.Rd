@@ -22,9 +22,9 @@ a vector of filtered gene names
 Filter low expressed genes
 }
 \examples{
-data("TOY_mrna")
+data("TOY_mrna_mat")
 filter_lowExpGenes(
-  genelist = TOY_mrna$genes,
-  TPM      = TOY_mrna$TPM
+  genelist = TOY_mrna_mat$genes,
+  TPM      = TOY_mrna_mat$TPM
 )
 }

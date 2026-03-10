@@ -28,11 +28,11 @@ a matrix of with decay rate with filtered genes; a matrix including a vector of 
 Core helper to compute a degraded/intact index using gene weight
 }
 \examples{
-data("TOY_mrna")
+data("TOY_mrna_mat")
 
 compute_DIIwt(
-  DR         = TOY_mrna$DR,
-  TPM        = TOY_mrna$TPM,
-  genelength = TOY_mrna$genelength
+  DR         = TOY_mrna_mat$DR,
+  TPM        = TOY_mrna_mat$TPM,
+  genelength = TOY_mrna_mat$gene_length
 )
 }
