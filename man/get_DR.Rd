@@ -4,7 +4,7 @@
 \alias{get_DR}
 \title{Get a decay rate for genes and samples (for a genelist)}
 \usage{
-get_DR(genelist, pileupPath, sampleInfo, cases = NULL, nCores = 32)
+get_DR(genelist, pileupPath, sampleInfo, cases = NULL, nCores = 2)
 }
 \arguments{
 \item{genelist}{a vector of gene names}
@@ -15,7 +15,7 @@ get_DR(genelist, pileupPath, sampleInfo, cases = NULL, nCores = 32)
 
 \item{cases}{a vector of specific samples among all samples in pileup. If NULL, all samples are selected. Default is NULL.}
 
-\item{nCores}{the number of cores for parallel computing. Default is 32.}
+\item{nCores}{the number of cores for parallel computing. Default is 2.}
 }
 \value{
 DR is a the number of genes x the number of samples matrix.
@@ -32,13 +32,13 @@ data("TOY_mrna_mat")
 
 ## Interface-only example (no meaningful output is produced)
 try(
-  get_DR(
-    genelist   = TOY_mrna_mat$genes,
-    pileupPath = rep(NA, length(TOY_mrna_mat$genes)),
-    sampleInfo = data.frame(SampleID=TOY_mrna_mat$samples),
-    nCores = 1
-  ),
-  silent = TRUE
+    get_DR(
+        genelist   = TOY_mrna_mat$genes,
+        pileupPath = rep(NA, length(TOY_mrna_mat$genes)),
+        sampleInfo = data.frame(SampleID=TOY_mrna_mat$samples),
+        nCores     = 2
+    ),
+    silent=TRUE
 )
 }
 \references{

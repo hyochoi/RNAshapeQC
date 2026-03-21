@@ -10,21 +10,17 @@ vignette: >
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(
-  collapse=TRUE,
-  comment ="#>",
-  fig.align="center"
-)
+knitr::opts_chunk$set(collapse=TRUE, comment="#>", fig.align="center")
 
 suppressPackageStartupMessages({
-  library(BiocStyle)
-  library(knitr)
-  library(RNAshapeQC)
-  library(SummarizedExperiment)
-  library(ConsensusClusterPlus)
+    library(BiocStyle)
+    library(knitr)
+    library(RNAshapeQC)
+    library(SummarizedExperiment)
+    library(ConsensusClusterPlus)
 })
 
-# Test R functions
+## Test R functions
 # devtools::document()
 # devtools::load_all() # load development version
 ```
@@ -75,32 +71,101 @@ _RNAshapeQC_ provides two complementary workflows: one for mRNA-seq and one for 
 - Total RNA-seq:  
   BAM → (BAM slicing) → pileup → MCD & wCV → AUC → PD → SOI → downstream applications
 
-For large cohorts or high-throughput analyses on HPC systems, additional execution considerations are discussed separately.
-
-This vignette focuses on users who already have processed matrices (e.g., DR/TPM/gene lengths for mRNA-seq or MCD/wCV for total RNA-seq) and want to quickly compute DII or SOI. In this vignette, we illustrate a **minimal, fully runnable workflow** using small synthetic toy datasets included in the package. These toy objects mimic typical patterns of RNA degradation and coverage nonuniformity but do not contain any real cohort data.
+In this vignette, we illustrate a **minimal, fully runnable workflow** using small synthetic toy datasets included in the package. These toy objects mimic typical patterns of RNA degradation and coverage nonuniformity but do not contain any real cohort data.
 
 For detailed method descriptions and extended examples, please refer to the **external user manual** ([_RNAshapeQCdocs_](https://miyeonyeon.github.io/bioc-vignettes/RNAshapeQCdocs_book/)).
 
 
 
 
-# Toy Datasets
+# Installation
 
 ```{r LoadPkg, eval=FALSE}
 ## Installation and loading
-# if (!requireNamespace("BiocManager", quietly=TRUE)) {
-#   install.packages("BiocManager")
-# }
-# BiocManager::install("RNAshapeQC")
+if (!requireNamespace("BiocManager", quietly=TRUE)) {
+    install.packages("BiocManager")
+}
+BiocManager::install("RNAshapeQC")
+
 library(RNAshapeQC)
 ```
+
+
+
+
+# Data Processing {#DataPrep}
+
+## Base-level coverage
+
+_RNAshapeQC_ provides the function `construct_pileup()`, to generate per-gene pileups as a single object from BAMs, optionally across multiple studies. For a single study, `construct_pileup()` saves `pileup`, `regions`, and `geneRanges`. For multiple studies, it saves `pileupList`, `regions`, and `geneRanges`.
+
+For example, one might run:
+
+```{r construct_pileup, eval=FALSE}
+construct_pileup(
+    Gene          = "Gene001",
+    studylist     = "TOY",   
+    regionsFile   = "/path/to/hg38.gene.regions.txt",
+    regionsFormat = "gencode.regions",
+    regionsCol    = 2,
+    bamFilesList  = list(TOY=toy_bam_paths),
+    caseIDList    = list(TOY=toy_case_ids),
+    outFile       = "pergene/TOY_Gene001_pileup.RData"  
+)
+```
+
+
+## Processed matrices
+
+Once pileups are available, `gen_DR()`, `gen_MCD()`, and `gen_wCV()` functions help to generate processed matrices (e.g., DR for mRNA-seq or MCD & wCV for total RNA-seq). In HPC environment, each row vector of the processed matrix is saved by submitting jobs:
+
+```{bash, eval=FALSE}
+sbatch /inst/bash/sbatch_pergene.sh \  # script to submit a higher-level job
+  genelist.txt \                       # list of gene symbol (rownames of a processed matrix)
+  TOY \                                # study name
+  Calculation.R \                      # R code including `gen_*` function
+  /inst/bash/submit_pergene.sh         # script to submit per-gene jobs to Slurm
+```
+
+For large cohorts or high-throughput analyses on HPC systems, additional execution considerations are discussed in the following note.
+
+
+<details>
+
+<summary>**HPC and Slurm execution strategies**</summary>
+
+Full HPC/Slurm workflows (e.g., per-gene batch submission) are highly dataset- and cluster-specific. Therefore, _RNAshapeQC_ only provides simple example bash scripts under `inst/bash/`, and users can write their own R wrappers following the same pattern as shown in this vignette.
+
+_RNAshapeQC_ distinguishes between two types of functions for computing QC metrics:
+
+- `get_*` functions (e.g., `get_DR()`, `get_MCD()`, `get_wCV()`)  
+  Designed to compute a **gene × sample matrix** for a given gene list in a single study. They use multicore parallelization within a single R session (via parallel / doParallel). In practice, they are typically run on a single HPC node for an entire gene list. For very large lists, users may split the gene list into chunks, run multiple `get_*` calls in separate jobs, and combine the results.
+
+- `gen_*` functions (e.g., `gen_DR()`, `gen_MCD()`, `gen_wCV()`)  
+  Designed for **per-gene jobs**, suitable for HPC/Slurm submission. 
+  They operate on a single gene at a time and can be applied to: 
+  - single-study pileup files 
+  - multi-study `pileupList` objects (e.g., TCGA-LUAD + TCGA-HNSC)
+  
+  Typical usage is one gene per job in a per-gene Slurm array, followed by combining outputs using helper functions (e.g., `combine_vecObj()`).
+  
+</details>
+
+
+
+
+# Data Analysis
+
+Users who do not yet have processed matrices can generate them by following the workflow described in [Section 3](#DataPrep). This section demonstrates the QC analysis using the toy datasets included in the package.
+
+## Toy datasets
 
 Two primary toy objects are shipped with the package:
 
 - `TOY_mrna_se`: synthetic mRNA-seq-like data (`DR` and `TPM` are stored as assays, and `gene_length` is stored in `rowData()`.)
 - `TOY_total_se`: synthetic total RNA-seq-like data (`MCD` and `wCV` are stored as assays.)
 
-_RNAshapeQC_ functions support direct input of `SummarizedExperiment` objects, which is the recommended Bioconductor container format. Optionally, examples in [Section 3](#mRNAex) and [Section 4](#totalRNAex) also demonstrate usage with matrix inputs (`TOY_mrna_mat` and `TOY_total_mat`). The resulting `SummarizedExperiment` objects from _RNAshapeQC_ outputs can be directly integrated into standard Bioconductor workflows as examples in [Section 5](#interoper).
+_RNAshapeQC_ functions support direct input of `SummarizedExperiment` objects, which is the recommended Bioconductor container format. Optionally, examples in [Section 4.2](#mRNAex) and [Section 4.3](#totalRNAex) also demonstrate usage with matrix inputs (`TOY_mrna_mat` and `TOY_total_mat`). The resulting `SummarizedExperiment` objects from _RNAshapeQC_ outputs can be directly integrated into standard Bioconductor workflows as examples in [Section 5](#interoper).
 
 ```{r LoadData}
 data("TOY_mrna_se")
@@ -115,35 +180,33 @@ TOY_total_se
 ```
 
 
-
-
-# mRNA-seq Example {#mRNAex}
+## mRNA-seq example {#mRNAex}
 
 For mRNA-seq data, _RNAshapeQC_ uses the PD of DS as a sample-level degradation metric.
 
 We can derive the DII using gene weights via `get_DIIwt()` with the toy objects:
 
 ```{r get_DIIwt}
-# Using SE input directly
+## Using SE input directly
 res_dii_se <- get_DIIwt(TOY_mrna_se)
 
 names(res_dii_se)
 head(res_dii_se$ds.vec)
 
-# (Optional) Using matrix/vector input
+## (Optional) Using matrix/vector input
 data(TOY_mrna_mat)
 
 res_dii_mat <- get_DIIwt(
-  DR         = TOY_mrna_mat$DR, 
-  TPM        = TOY_mrna_mat$TPM, 
-  genelength = TOY_mrna_mat$gene_length
+    DR         = TOY_mrna_mat$DR, 
+    TPM        = TOY_mrna_mat$TPM, 
+    genelength = TOY_mrna_mat$gene_length
 )
 
-# Compare SE and matrix inputs
-all.equal(res_dii_se$DR2,     res_dii_mat$DR2)
-all.equal(res_dii_se$ds.vec,  res_dii_mat$ds.vec)
+## Compare SE and matrix inputs
+all.equal(res_dii_se$DR2, res_dii_mat$DR2)
+all.equal(res_dii_se$ds.vec, res_dii_mat$ds.vec)
 all.equal(res_dii_se$gene.df, res_dii_mat$gene.df)
-all.equal(res_dii_se$s,       res_dii_mat$s)
+all.equal(res_dii_se$s, res_dii_mat$s)
 ```
 
 When a `SummarizedExperiment` object is supplied, `get_DIIwt()` extracts the required assays and row-level metadata internally. As shown above, results obtained from `SummarizedExperiment` input and matrix/vector input are identical.
@@ -162,16 +225,16 @@ The returned list typically includes:
 We can plot the distributions of DS and PD, as well as the heatmap of DR with gene weights:
 
 ```{r plot_DIIwt, message=FALSE, echo=TRUE}
-# Path to a temporary file
+## Path to a temporary file
 outfile <- file.path(tempdir(), "Fig_DIIwt.png")
 
 plot_DIIwt(
-  DR        = res_dii_se$DR2,
-  DIIresult = res_dii_se,
-  outFile   = outfile
+    DR        = res_dii_se$DR2,
+    DIIresult = res_dii_se,
+    outFile   = outfile
 )
 
-# Saving DIIwt plot to: /.../Fig_DIIwt.png
+## Saving DIIwt plot to: /.../Fig_DIIwt.png
 ```
 
 The function prints the file path of the saved figure in the console, and we can open the file directly from that location.
@@ -181,35 +244,33 @@ knitr::include_graphics(outfile)
 ```
 
 
-
-
-# Total RNA-seq Example {#totalRNAex}
+## Total RNA-seq example {#totalRNAex}
 
 For total RNA-seq data, _RNAshapeQC_ focuses on the relationship between MCD and wCV. 
 
 We can combine these metrics to measure coverage-shape optimality using `get_SOI()`:
 
 ```{r get_SOI}
-# Using SE input directly
+## Using SE input directly
+## The cutoff value can be chosen by inspecting the PD distribution.
 res_soi_se <- get_SOI(TOY_total_se, cutoff=1)
 
 names(res_soi_se)
 head(res_soi_se$auc.vec)
 
-# (Optional) Using matrix input
-# The cutoff value can be chosen by inspecting the PD distribution.
+## (Optional) Using matrix input
 data(TOY_total_mat)
 
 res_soi_mat <- get_SOI(
-  MCD    = TOY_total_mat$MCD,
-  wCV    = TOY_total_mat$wCV,
-  cutoff = 1
+    MCD    = TOY_total_mat$MCD,
+    wCV    = TOY_total_mat$wCV,
+    cutoff = 1
 )
 
-# Compare SE and matrix inputs
-all.equal(res_soi_se$auc.vec,   res_soi_mat$auc.vec)
+## Compare SE and matrix inputs
+all.equal(res_soi_se$auc.vec, res_soi_mat$auc.vec)
 all.equal(res_soi_se$auc.coord, res_soi_mat$auc.coord)
-all.equal(res_soi_se$rangeMCD,  res_soi_mat$rangeMCD)
+all.equal(res_soi_se$rangeMCD, res_soi_mat$rangeMCD)
 ```
 
 The results obtained from `SummarizedExperiment` input and matrix input are identical, and it confirms consistent behavior of `get_SOI()` across supported input types.
@@ -228,14 +289,14 @@ We can visualize the smoothed relationship using `plot_SOI()`:
 ```{r plot_SOI, message=FALSE, echo=TRUE}
 outfile <- file.path(tempdir(), "Fig_SOI.png")
 
-# The cutoff value can be chosen by inspecting the PD distribution.
+## The cutoff value can be chosen by inspecting the PD distribution.
 plot_SOI(
-  SOIresult = res_soi_se,
-  cutoff    = 1,
-  outFile   = outfile 
+    SOIresult = res_soi_se,
+    cutoff    = 1,
+    outFile   = outfile 
 )
 
-# Saving SOI plot to: /.../Fig_SOI.png
+## Saving SOI plot to: /.../Fig_SOI.png
 ```
 
 This figure illustrates how wCV behaves as a function of MCD, and which samples are classified as suboptimal versus optimal.
@@ -256,21 +317,16 @@ This is an example of constructing `SummarizedExperiment` objects and applying s
 ```{r se_mrna, message=FALSE, echo=TRUE}
 library(SummarizedExperiment)
 
-# Store QC results in mRNA-seq
+## Store QC results in mRNA-seq
 se_mrna <- SummarizedExperiment(
-  assays = list(
-    DR = assay(TOY_mrna_se, "DR"),
-    TPM = assay(TOY_mrna_se, "TPM")
-  ),
-  colData = DataFrame(res_dii_se$ds.vec),
-  metadata = list(
-    s = res_dii_se$s
-  )
+    assays   = list(DR=assay(TOY_mrna_se, "DR"), TPM=assay(TOY_mrna_se, "TPM")),
+    colData  = DataFrame(res_dii_se$ds.vec),
+    metadata = list(s=res_dii_se$s)
 )
 se_mrna
 
-# Subsetting to keep high-quality samples in mRNA-seq
-se_mrna_hq <- se_mrna[, se_mrna$DII=="Intact"]
+## Subsetting to keep high-quality samples in mRNA-seq
+se_mrna_hq <- se_mrna[, se_mrna$DII == "Intact"]
 head(assay(se_mrna_hq, "TPM"))
 ```
 
@@ -279,22 +335,22 @@ This QC filtering can be applied prior to class discovery to reduce clustering i
 ```{r CC, message=FALSE, echo=TRUE}
 library(ConsensusClusterPlus)
 
-# TPM log transform
+## TPM log transform
 tpm_hq  <- log2(assay(se_mrna_hq, "TPM") + 1)
 
-# Set a random seed for reproducibility
+## Set a random seed for reproducibility
 set.seed(1)
 
 cc <- ConsensusClusterPlus(
-  tpm_hq,
-  maxK = 6,
-  reps = 100,
-  pItem = 0.8,
-  pFeature = 0.8,
-  clusterAlg = "hc",
-  distance = "pearson",
-  plot = "png",
-  title = tempdir()
+    tpm_hq,
+    maxK       = 6,
+    reps       = 100,
+    pItem      = 0.8,
+    pFeature   = 0.8,
+    clusterAlg = "hc",
+    distance   = "pearson",
+    plot       = "png",
+    title      = tempdir()
 )
 cc[[3]]$consensusClass
 ```
@@ -302,109 +358,19 @@ cc[[3]]$consensusClass
 The protocol-specific QC metrics stored in `colData()` can be included as covariates in a differential expression analysis ([_DESeq2_](https://bioconductor.org/packages/release/bioc/vignettes/DESeq2/inst/doc/DESeq2.html)) (e.g., `design = ~ batch + condition + SOI`).
 
 ```{r se_total, message=FALSE, echo=TRUE}
-# Store QC results in total RNA-seq
+## Store QC results in total RNA-seq
 se_total <- SummarizedExperiment(
-  assays = list(
-    MCD = assay(TOY_total_se, "MCD"),
-    wCV = assay(TOY_total_se, "wCV")
-  ),
-  rowData = DataFrame(Gene = rownames(assay(TOY_total_se, "MCD"))),
-  colData = res_soi_se$auc.vec,
-  metadata = list(
-    auc.coord = res_soi_se$auc.coord,
-    rangeMCD  = res_soi_se$rangeMCD
-  )
+    assays   = list(MCD=assay(TOY_total_se, "MCD"), wCV=assay(TOY_total_se, "wCV")),
+    rowData  = DataFrame(Gene=rownames(assay(TOY_total_se, "MCD"))),
+    colData  = DataFrame(res_soi_se$auc.vec),
+    metadata = list(auc.coord=res_soi_se$auc.coord, rangeMCD=res_soi_se$rangeMCD)
 )
 se_total
 
-# Subsetting to keep high-quality samples in total RNA-seq
-se_total_hq <- se_total[, se_total$SOI=="Optimal"]
+## Subsetting to keep high-quality samples in total RNA-seq
+se_total_hq <- se_total[, se_total$SOI == "Optimal"]
 head(assay(se_total_hq, "wCV"))
 ```
-
-
-
-
-# Overview of Pileup Construction
-
-In real applications (e.g., TCGA, Alliance/CALGB), users typically start from BAM files.
-_RNAshapeQC_ provides the function `construct_pileup()`, to generate per-gene pileups from BAMs, optionally across multiple studies.
-
-For example, one might run:
-
-```{r construct_pileup, eval=FALSE}
-# Single-study mode
-construct_pileup(
-  Gene            = "KEAP1",
-  studylist       = "LUAD",   
-  regionsFile     = "/path/to/TCGA.hg19.gene.regions.txt",
-  regionsFormat   = "gencode.regions",
-  geneCol         = 1,
-  regionsCol      = 2,
-  bamFilesList    = list(
-    LUAD = luad_bam_paths   
-  ),
-  caseIDList      = list(
-    LUAD = luad_case_ids    
-  ),
-  max_depth       = 100000,
-  strand.specific = FALSE,
-  nCores          = 10,
-  outFile         = "pergene/LUAD_KEAP1_pileup.RData"  
-)
-
-# Multi-study mode
-construct_pileup(
-  Gene            = "KEAP1",
-  studylist       = c("LUAD", "HNSC"),
-  regionsFile     = "/path/to/TCGA.hg19.gene.regions.txt",
-  regionsFormat   = "gencode.regions",
-  geneCol         = 1,
-  regionsCol      = 2,
-  bamFilesList    = list(
-    LUAD = luad_bam_paths,
-    HNSC = hnsc_bam_paths
-    ),
-   caseIDList     = list(
-     LUAD = luad_case_ids,
-     HNSC = hnsc_case_ids
-   ),
-  max_depth       = 100000,
-  strand.specific = FALSE,
-  nCores          = 10,
-  outFile         = "pergene/KEAP1_pileup.RData" 
-)
-```
-
-For a **single study**, `construct_pileup()` saves `pileup`, `regions`, and `geneRanges`.  
-For **multiple studies**, it saves `pileupList`, `regions`, and `geneRanges`.
-
-Once pileups are available, users can apply the same QC metrics as in this vignette but on real RNA-seq coverage data:
-
-- `get_DR()` / `gen_DR()` for mRNA-seq degradation
-- `get_MCD()` / `gen_MCD()` and `get_wCV()` / `gen_wCV()` for total RNA-seq coverage shape
-- `get_DIIwt()` and `get_SOI()` for sample-level QC summaries
-
-***
-
-**HPC and Slurm execution strategies**
-
-Full HPC/Slurm workflows (e.g., per-gene batch submission) are highly dataset- and cluster-specific. Therefore, _RNAshapeQC_ only provides simple example bash scripts under `inst/bash/`, and users can write their own R wrappers following the same pattern as shown in this vignette.
-
-_RNAshapeQC_ distinguishes between two types of functions for computing QC metrics:
-
-- `get_*` functions (e.g., `get_DR()`, `get_MCD()`, `get_wCV()`)  
-  Designed to compute a **gene × sample matrix** for a given gene list in a single study. They use multicore parallelization within a single R session (via parallel / doParallel). In practice, they are typically run on a single HPC node for an entire gene list. For very large lists, users may split the gene list into chunks, run multiple `get_*` calls in separate jobs, and combine the results.
-
-- `gen_*` functions (e.g., `gen_DR()`, `gen_MCD()`, `gen_wCV()`)  
-  Designed for **per-gene jobs**, suitable for HPC/Slurm submission. 
-  They operate on a single gene at a time and can be applied to: 
-  - single-study pileup files 
-  - multi-study `pileupList` objects (e.g., TCGA-LUAD + TCGA-HNSC)
-  
-  Typical usage is one gene per job in a per-gene Slurm array, followed by combining outputs using helper functions (e.g., `combine_vecObj()`).
-  
-***
 
 
 
@@ -413,10 +379,10 @@ _RNAshapeQC_ distinguishes between two types of functions for computing QC metri
 
 This vignette demonstrated a minimal, runnable example of how to:
 
+- understand how `construct_pileup()` fits into a real workflow,
 - load toy `SummarizedExperiment` datasets (`TOY_mrna_se` and `TOY_total_se`),
 - use `get_DIIwt()` to derive a degraded/intact index from DR,
-- use `get_SOI()` to derive a suboptimal/optimal index from MCD and wCV,
-- understand how `construct_pileup()` fits into a real BAM → coverage → QC workflow.
+- use `get_SOI()` to derive a suboptimal/optimal index from MCD and wCV.
 
 The examples here are intentionally small and synthetic so that the vignette builds quickly and reproducibly. More detailed workflows, methodological explanations, and real-data case studies are documented separately in the full-length user manual.
 

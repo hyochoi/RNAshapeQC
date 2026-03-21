@@ -31,8 +31,8 @@ Core helper to compute a degraded/intact index using gene weight
 data("TOY_mrna_mat")
 
 compute_DIIwt(
-  DR         = TOY_mrna_mat$DR,
-  TPM        = TOY_mrna_mat$TPM,
-  genelength = TOY_mrna_mat$gene_length
+    DR         = TOY_mrna_mat$DR,
+    TPM        = TOY_mrna_mat$TPM,
+    genelength = TOY_mrna_mat$gene_length
 )
 }

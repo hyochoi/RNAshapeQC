@@ -13,7 +13,7 @@ combine_vecObj(
   margin,
   rowNames,
   colNames,
-  nCores = 32
+  nCores = 2
 )
 }
 \arguments{
@@ -34,7 +34,7 @@ numeric vector to be extracted.}
 
 \item{colNames}{a vector of sample names}
 
-\item{nCores}{the number of cores for parallel computing. Default is 32.}
+\item{nCores}{the number of cores for parallel computing. Default is 2.}
 }
 \value{
 a gene x sample matrix

@@ -19,5 +19,5 @@ Get a degraded/intact index for samples using hierarchical clustering
 }
 \examples{
 data("TOY_mrna_mat")
-get_DIIhc(DR = TOY_mrna_mat$DR)
+get_DIIhc(DR=TOY_mrna_mat$DR)
 }

@@ -22,8 +22,7 @@ Core helper to build exon-only pileup
 \examples{
 ## Requires a base-level coverage pileup .RData file
 try(
-  .build_pileupExon(pileupPath = "path/to/pileup.RData"),
-  silent = TRUE
+    .build_pileupExon(pileupPath="path/to/pileup.RData"), silent=TRUE
 )
 }
 \references{

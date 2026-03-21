@@ -23,8 +23,5 @@ Filter low expressed genes
 }
 \examples{
 data("TOY_mrna_mat")
-filter_lowExpGenes(
-  genelist = TOY_mrna_mat$genes,
-  TPM      = TOY_mrna_mat$TPM
-)
+filter_lowExpGenes(genelist=TOY_mrna_mat$genes, TPM=TOY_mrna_mat$TPM)
 }

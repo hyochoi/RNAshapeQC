@@ -27,12 +27,12 @@ data("TOY_mrna_se")
 res <- get_DIIwt(TOY_mrna_se)
 
 try(
-  plot_DIIwt(
-    DR        = TOY_mrna_se$DR,
-    DIIresult = res,
-    outFile   = tempfile(fileext=".png")
-  ),
-  silent = TRUE
+    plot_DIIwt(
+        DR        = TOY_mrna_se$DR,
+        DIIresult = res,
+        outFile   = tempfile(fileext=".png")
+    ),
+    silent=TRUE
 )
 }
 \references{

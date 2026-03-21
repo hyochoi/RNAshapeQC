@@ -41,16 +41,16 @@ Plot gene body coverage
 \examples{
 ## Interface-only example
 try(
-  plot_GBC(
-    pileupPath = NA,
-    geneNames  = "GENE1",
-    sampleInfo = data.frame(
-      SampleID = c("S1", "S2"),
-      CODING_BASES = c(1, 1),
-      INTRONIC_BASES = c(1, 1)
+    plot_GBC(
+        pileupPath = NA,
+        geneNames  = "GENE1",
+        sampleInfo = data.frame(
+            SampleID       = c("S1", "S2"),
+            CODING_BASES   = c(1, 1),
+            INTRONIC_BASES = c(1, 1)
+        ),
+        plot       = FALSE
     ),
-    plot = FALSE
-  ),
-  silent = TRUE
+    silent=TRUE
 )
 }

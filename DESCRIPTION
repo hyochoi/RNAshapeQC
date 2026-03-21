@@ -1,7 +1,7 @@
 Package: RNAshapeQC
 Type: Package
 Title: RNA Coverage-Shape-Based Quality Control Metrics
-Version: 0.99.7
+Version: 0.99.8
 Authors@R: 
     c(
       person("Miyeon", "Yeon",
@@ -61,13 +61,13 @@ Imports:
     DescTools,
     ggpubr,
     MASS,
-    SummarizedExperiment
+    SummarizedExperiment,
+    BiocParallel
 Suggests:
     doParallel,
     knitr,
     rmarkdown,
     BiocStyle,
-    BiocParallel,
     testthat (>= 3.0.0),
     PupillometryR,
     matrixStats,

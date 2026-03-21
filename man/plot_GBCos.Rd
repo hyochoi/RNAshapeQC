@@ -26,27 +26,27 @@ Plot gene body coverage with optimal samples
 \examples{
 ## Interface-only example
 GBCresult <- list(
-  GBP = data.frame(
-    region = 1:2,
-    sample = c("S1", "S2"),
-    scale.geom = c(1, 1),
-    RatioIntron = c(1, 1)
-  )
+    GBP=data.frame(
+        region      = 1:2,
+        sample      = c("S1", "S2"),
+        scale.geom  = c(1, 1),
+        RatioIntron = c(1, 1)
+    )
 )
 
 auc.vec <- data.frame(
-  Sample = c("S1", "S2"),
-  PD = c(0, 0),
-  SOI = c("Optimal", "Optimal")
+    Sample = c("S1", "S2"),
+    PD     = c(0, 0),
+    SOI    = c("Optimal", "Optimal")
 )
 
 try(
-  plot_GBCos(
-    sampleInfo = data.frame(SampleID=c("S1","S2")),
-    GBCresult  = GBCresult,
-    auc.vec    = auc.vec,
-    plot       = FALSE
-  ),
-  silent = TRUE
+    plot_GBCos(
+        sampleInfo = data.frame(SampleID=c("S1", "S2")),
+        GBCresult  = GBCresult,
+        auc.vec    = auc.vec,
+        plot       = FALSE
+    ),
+    silent=TRUE
 )
 }

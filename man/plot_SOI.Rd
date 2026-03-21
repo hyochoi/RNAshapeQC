@@ -24,10 +24,7 @@ data("TOY_total_se")
 
 res <- get_SOI(TOY_total_se)
 
-plot_SOI(
-  SOIresult = res,
-  outFile   = tempfile(fileext=".png")
-)
+plot_SOI(SOIresult=res, outFile=tempfile(fileext=".png"))
 }
 \references{
 https://jtr13.github.io/cc21fall2/raincloud-plot-101-density-plot-or-boxplotwhy-not-do-both.html

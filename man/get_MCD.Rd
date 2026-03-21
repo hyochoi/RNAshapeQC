@@ -4,7 +4,7 @@
 \alias{get_MCD}
 \title{Get a mean coverage depth for genes and samples (for a genelist)}
 \usage{
-get_MCD(genelist, pileupPath, sampleInfo, cases = NULL, nCores = 32)
+get_MCD(genelist, pileupPath, sampleInfo, cases = NULL, nCores = 2)
 }
 \arguments{
 \item{genelist}{a vector of gene names}
@@ -15,7 +15,7 @@ get_MCD(genelist, pileupPath, sampleInfo, cases = NULL, nCores = 32)
 
 \item{cases}{a vector of specific samples among all samples in pileup. If NULL, all samples are selected. Default is NULL.}
 
-\item{nCores}{the number of cores for parallel computing. Default is 32.}
+\item{nCores}{the number of cores for parallel computing. Default is 2.}
 }
 \value{
 MCD is a the number of genes x the number of samples matrix.
@@ -32,12 +32,12 @@ data("TOY_total_mat")
 
 ## Interface-only example (no meaningful output is produced)
 try(
-  get_MCD(
-    genelist   = TOY_total_mat$genes,
-    pileupPath = rep(NA, length(TOY_total_mat$genes)),
-    sampleInfo = data.frame(SampleID=TOY_total_mat$samples),
-    nCores = 1
-  ),
-  silent = TRUE
+    get_MCD(
+        genelist   = TOY_total_mat$genes,
+        pileupPath = rep(NA, length(TOY_total_mat$genes)),
+        sampleInfo = data.frame(SampleID=TOY_total_mat$samples),
+        nCores     = 2
+    ),
+    silent=TRUE
 )
 }

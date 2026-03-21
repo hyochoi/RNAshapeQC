@@ -22,7 +22,6 @@ Get a focused pileup of exon location (for single-study)
 \examples{
 ## Requires a base-level coverage pileup .RData file
 try(
-  get_pileupExon(g = 1, pileupPath = c("path/to/pileup1.RData", "path/to/pileup2.RData")),
-  silent = TRUE
+    get_pileupExon(g=1, pileupPath=c("path/to/pileup1.RData", "path/to/pileup2.RData")), silent=TRUE
 )
 }

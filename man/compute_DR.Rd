@@ -42,32 +42,23 @@ The arguments \code{pileupData}, \code{exonRanges}, \code{logshiftVal}, and
 ## API illustration only
 ## Exon-only pileup matrix (rows: exon positions, columns: samples)
 ## Typically obtained via get_pileupExon()
-pileupData <- matrix(
-  c(10, 12, 8,  9,
-    5,  6,  4,  5),
-  nrow=2,
-  byrow=TRUE
-)
+pileupData <- matrix(c(10, 12, 8, 9, 5, 6, 4, 5), nrow=2, byrow=TRUE)
 colnames(pileupData) <- c("S1", "S2", "S3", "S4")
 
 sampleInfo <- data.frame(SampleID=colnames(pileupData))
 
 exonRanges <- list(
-  Gene = "KEAP1",
-  cRanges = data.frame(
-    e.start = c(1),
-    e.end   = c(50001),
-    row.names = "exon1"
-  ),
-  regions     = "chr19:10600000-10650000:+",
-  new.regions = "chr19:10600000-10650000:+",
-  strand      = "+"
+    Gene        = "KEAP1",
+    cRanges     = data.frame(e.start=c(1), e.end=c(50001), row.names="exon1"),
+    regions     = "chr19:10600000-10650000:+",
+    new.regions = "chr19:10600000-10650000:+",
+    strand      = "+"
 )
 
 compute_DR(
-  pileupData = pileupData,
-  exonRanges = exonRanges,
-  sampleInfo = sampleInfo
+    pileupData = pileupData,
+    exonRanges = exonRanges,
+    sampleInfo = sampleInfo
 )
 }
 \references{

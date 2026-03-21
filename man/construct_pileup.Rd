@@ -15,7 +15,7 @@ construct_pileup(
   caseIDList,
   max_depth = 1e+05,
   strand.specific = FALSE,
-  nCores = 10,
+  nCores = 2,
   outFile = NULL
 )
 }
@@ -34,10 +34,10 @@ to detect whether the file uses SCISSOR-style columns \code{gene_name} and
 \code{regions}, falling back to \code{"gencode.regions"} otherwise.}
 
 \item{geneCol}{integer; column index for the gene identifier when
-\code{regionsFormat = "gencode.regions"}. Default is 1.}
+\code{regionsFormat="gencode.regions"}. Default is 1.}
 
 \item{regionsCol}{integer; column index for the regions string when
-\code{regionsFormat = "gencode.regions"}. Default is \code{NULL}, which
+\code{regionsFormat="gencode.regions"}. Default is \code{NULL}, which
 is interpreted as 2.}
 
 \item{bamFilesList}{named list of character vectors of BAM file paths}
@@ -52,7 +52,7 @@ Default is 100000.}
 If \code{TRUE}, only the "+" strand is retained (when strand information
 is available). Default is \code{FALSE}.}
 
-\item{nCores}{the number of cores for parallel computing. Default is 10.}
+\item{nCores}{the number of cores for parallel computing. Default is 2.}
 
 \item{outFile}{a directory with a file name to save outputs. Default is NULL.}
 }

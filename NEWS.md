@@ -1,3 +1,8 @@
+# RNAshapeQC 0.99.8
+- Added an Installation section and relocated Data Processing section
+- Updated to Bioconductor style based on use of space and code syntax efficiency
+- Updated to BiocParallel with 2 cores as default
+
 # RNAshapeQC 0.99.7
 - Updated vignette to demonstrate SummarizedExperiment workflow
 - Fixed dataset documentation structure

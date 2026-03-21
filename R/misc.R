@@ -6,10 +6,10 @@
 #' @noRd
 
 convert_Chr2Numcol <- function(df, colnums) {
-  vec <- c(colnums)
-  df[ , vec] <- apply(df[ , vec,drop=FALSE], 2, function(x) as.numeric(as.character(x)))
+    vec <- c(colnums)
+    df[, vec] <- apply(df[, vec, drop=FALSE], 2, function(x) as.numeric(as.character(x)))
 
-  return(df)
+    return(df)
 }
 
 
@@ -22,30 +22,27 @@ convert_Chr2Numcol <- function(df, colnums) {
 #' @references https://stats.stackexchange.com/questions/30858/how-to-calculate-cumulative-distribution-in-r
 #' @noRd
 
-convert_Cont2eCDF <- function(data, name, margin){
+convert_Cont2eCDF <- function(data, name, margin) {
+    ## Create ecdf function
+    fun_ecdf <- stats::ecdf(data)
 
-  # Create ecdf function
-  fun_ecdf <- stats::ecdf(data)
+    ## Apply ecdf function
+    my_ecdf <- fun_ecdf(data)
 
-  # Apply ecdf function
-  my_ecdf <- fun_ecdf(data)
+    ## Combine x & eCDF values
+    data_ecdf1 <- data.frame(data, my_ecdf)
+    data_ecdf2 <- cbind(as.matrix(rownames(data_ecdf1)), data_ecdf1)
+    data_ecdf3 <- data_ecdf2[, -c(2)]
 
-  # Combine x & eCDF values
-  data_ecdf1 <- data.frame(data, my_ecdf)
-  data_ecdf2 <- cbind(as.matrix(rownames(data_ecdf1)), data_ecdf1)
-  data_ecdf3 <- data_ecdf2[,-c(2)]
+    if (margin == 1) {
+        colnames(data_ecdf3) <- c("geneSymbol", sprintf("%s_ecdf", name))
+    } else if (margin == 2) {
+        colnames(data_ecdf3) <- c("NewSampleId", sprintf("%s_ecdf", name))
+    } else {
+        stop(margin, " is not an option for margin.")
+    }
 
-  if (margin==1) {
-    colnames(data_ecdf3) <- c("geneSymbol", sprintf("%s_ecdf",name))
-
-  } else if (margin==2) {
-    colnames(data_ecdf3) <- c("NewSampleId", sprintf("%s_ecdf",name))
-
-  } else {
-    stop(margin," is not an option for margin.")
-  }
-
-  return(data_ecdf3)
+    return(data_ecdf3)
 }
 
 
@@ -57,17 +54,18 @@ convert_Cont2eCDF <- function(data, name, margin){
 #' @noRd
 
 convert_pivot.longer <- function(mat, rcenames) {
+    row <- rownames(mat)
+    mat1 <- data.frame(row, mat)
+    mat2 <- tidyr::pivot_longer(
+        data      = mat1,
+        cols      = !tidyr::starts_with("row"),
+        names_to  = "col",
+        values_to = "cell"
+    )
+    mat3 <- mat2[order(mat2$col, decreasing=FALSE), ]
+    colnames(mat3) <- rcenames
 
-  row <- rownames(mat)
-  mat1 <- data.frame(row, mat)
-  mat2 <- tidyr::pivot_longer(mat1,
-                              cols = !tidyr::starts_with("row"),
-                              names_to = "col",
-                              values_to = "cell")
-  mat3 <- mat2[order(mat2$col, decreasing = FALSE), ]
-  colnames(mat3) <- rcenames
-
-  return(mat3)
+    return(mat3)
 }
 
 
@@ -82,48 +80,45 @@ convert_pivot.longer <- function(mat, rcenames) {
 #' @param margin 1 and 2 return for gene- and sample-level vectors, respectively.
 #' @param rowNames a vector of gene names
 #' @param colNames a vector of sample names
-#' @param nCores the number of cores for parallel computing. Default is 32.
+#' @param nCores the number of cores for parallel computing. Default is 2.
 #' @return a gene x sample matrix
 #' @examples
 #' ## API illustration only
 #' invisible(NULL)
 #' @export
 
-combine_vecObj <- function(filePath, objName=NULL, header=NULL, skip=NULL, txtCol=NULL, margin, rowNames, colNames, nCores=32) {
-
-  if (!(margin %in% c(1, 2))) {
-    stop(margin, " is not an option for margin.")
-  }
-
-  # Make a list of vectors
-  vecList <- parallel::mclapply(filePath, function(i) {
-    ext <- tools::file_ext(i)
-
-    if (ext=="RData") {
-      if (is.null(objName)) stop("objName should be specified for RData files.")
-      extract_RData(i, objName)
-
-    } else if (ext=="txt") {
-      if (is.null(header)||is.null(skip)||is.null(txtCol)) stop("header, skip, and txtCol should be specified for txt files.")
-      df <- utils::read.table(i, header=header, skip=skip)
-      if (txtCol>ncol(df)) stop("txtCol exceeds number of columns in txt files: ", i)
-      as.numeric(df[[txtCol]])
-
-    } else {
-      stop("Unsupported file type: ", ext)
+combine_vecObj <- function(filePath, objName=NULL, header=NULL, skip=NULL, txtCol=NULL, margin, rowNames, colNames, nCores=2) {
+    if (!(margin %in% c(1, 2))) {
+        stop(margin, " is not an option for margin.")
     }
-  }, mc.cores=max(1L, nCores-1L))
 
-  # Combine by rows or columns
-  if (margin==1) {
-    mat <- do.call(rbind, vecList)
-  } else if (margin==2) {
-    mat <- do.call(cbind, vecList)
-  }
-  rownames(mat) <- rowNames
-  colnames(mat) <- colNames
+    ## Make a list of vectors
+    vecList <- BiocParallel::bplapply(filePath, function(i) {
+        ext <- tools::file_ext(i)
 
-  return(mat)
+        if (ext == "RData") {
+            if (is.null(objName)) stop("objName should be specified for RData files.")
+            extract_RData(i, objName)
+        } else if (ext == "txt") {
+            if (is.null(header) || is.null(skip) || is.null(txtCol)) stop("header, skip, and txtCol should be specified for txt files.")
+            df <- utils::read.table(i, header=header, skip=skip)
+            if (txtCol > ncol(df)) stop("txtCol exceeds number of columns in txt files: ", i)
+            as.numeric(df[[txtCol]])
+        } else {
+            stop("Unsupported file type: ", ext)
+        }
+    }, BPPARAM=BiocParallel::MulticoreParam(workers=max(1L, nCores - 1L)))
+
+    ## Combine by rows or columns
+    if (margin == 1) {
+        mat <- do.call(rbind, vecList)
+    } else if (margin == 2) {
+        mat <- do.call(cbind, vecList)
+    }
+    rownames(mat) <- rowNames
+    colnames(mat) <- colNames
+
+    return(mat)
 }
 
 
@@ -141,12 +136,12 @@ combine_vecObj <- function(filePath, objName=NULL, header=NULL, skip=NULL, txtCo
 #' @export
 
 extract_RData <- function(file, object) {
-  # Function for extracting an object from a .RData file created by R's save() command
-  # Inputs: RData file, object name
-  E <- new.env()
-  load(file=file, envir=E)
+    ## Function for extracting an object from a .RData file created by R's save() command
+    ## Inputs: RData file, object name
+    E <- new.env()
+    load(file=file, envir=E)
 
-  return(get(object, envir=E, inherits=FALSE))
+    return(get(object, envir=E, inherits=FALSE))
 }
 
 
@@ -157,11 +152,11 @@ extract_RData <- function(file, object) {
 #' @references https://stackoverflow.com/questions/11121385/repeat-rows-of-a-data-frame
 #' @noRd
 
-repeach <- function(mat, n){
-  mat1 <- mat[rep(seq_len(nrow(mat)), each=n), ]
-  mat2 = as.matrix(mat1)
+repeach <- function(mat, n) {
+    mat1 <- mat[rep(seq_len(nrow(mat)), each=n), ]
+    mat2 <- as.matrix(mat1)
 
-  return(mat2)
+    return(mat2)
 }
 
 
@@ -173,10 +168,10 @@ repeach <- function(mat, n){
 #' @references Hua Liu, Jinhong You & Jiguo Cao (2023). A Dynamic Interaction Semiparametric Function-on-Scalar Model, Journal of the American Statistical Association, 118:541, 360-373, DOI: 10.1080/01621459.2021.1933496
 #' @noRd
 
-repmat <- function(X, m, n){
-  mx = dim(X)[1]
-  nx = dim(X)[2]
-  matrix(t(matrix(X, mx, nx*n)), mx*m, nx*n, byrow=TRUE)
+repmat <- function(X, m, n) {
+    mx <- dim(X)[1]
+    nx <- dim(X)[2]
+    matrix(t(matrix(X, mx, nx * n)), mx * m, nx * n, byrow=TRUE)
 }
 
 
@@ -185,11 +180,11 @@ repmat <- function(X, m, n){
 #' @noRd
 
 utils::globalVariables(c(
-  "AUC", "CODING_BASES", "Cluster", "Cluster_new", "ColSums",
-  "DII", "DS", "INTRONIC_BASES", "Order", "PD", "RatioIntron",
-  "SOI", "Sample", "SampleID", "g", "geneSymbol", "geneid",
-  "genelength", "group", "logLength", "logTPM", "meanSum",
-  "merged_kb", "mt1", "pileupList", "region", "regions",
-  "scale.geom", "scaledLength", "value", "var", "w_norm",
-  "w_raw", "x", "x1", "x2", "xMCD", "y", "y1", "y2"
+    "AUC", "CODING_BASES", "Cluster", "Cluster_new", "ColSums",
+    "DII", "DS", "INTRONIC_BASES", "Order", "PD", "RatioIntron",
+    "SOI", "Sample", "SampleID", "g", "geneSymbol", "geneid",
+    "genelength", "group", "logLength", "logTPM", "meanSum",
+    "merged_kb", "mt1", "pileupList", "region", "regions",
+    "scale.geom", "scaledLength", "value", "var", "w_norm",
+    "w_raw", "x", "x1", "x2", "xMCD", "y", "y1", "y2"
 ))

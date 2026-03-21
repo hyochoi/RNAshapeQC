@@ -13,7 +13,7 @@ get_wCV(
   winSize = 20,
   egPct = 10,
   cases = NULL,
-  nCores = 32
+  nCores = 2
 )
 }
 \arguments{
@@ -33,7 +33,7 @@ get_wCV(
 
 \item{cases}{a vector of specific samples among all samples in pileup. If NULL, all samples are selected. Default is NULL.}
 
-\item{nCores}{the number of cores for parallel computing. Default is 32.}
+\item{nCores}{the number of cores for parallel computing. Default is 2.}
 }
 \value{
 wCV is a the number of genes x the number of samples matrix.
@@ -50,12 +50,12 @@ data("TOY_total_mat")
 
 ## Interface-only example (no meaningful output is produced)
 try(
-  get_wCV(
-    genelist   = TOY_total_mat$genes,
-    pileupPath = rep(NA, length(TOY_total_mat$genes)),
-    sampleInfo = data.frame(SampleID=TOY_total_mat$samples),
-    nCores = 1
-  ),
-  silent = TRUE
+    get_wCV(
+        genelist   = TOY_total_mat$genes,
+        pileupPath = rep(NA, length(TOY_total_mat$genes)),
+        sampleInfo = data.frame(SampleID=TOY_total_mat$samples),
+        nCores     = 2
+    ),
+    silent=TRUE
 )
 }

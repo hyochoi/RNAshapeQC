@@ -26,8 +26,5 @@ Core helper to compute a suboptimal/optimal index
 \examples{
 data("TOY_total_mat")
 
-compute_SOI(
-  MCD = TOY_total_mat$MCD,
-  wCV = TOY_total_mat$wCV
-)
+compute_SOI(MCD=TOY_total_mat$MCD, wCV=TOY_total_mat$wCV)
 }
