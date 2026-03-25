@@ -1,3 +1,6 @@
+# RNAshapeQC 0.99.9
+- Updated `norm_pileup.gene()` to use `nCores` directly instead of `nCores/2`
+
 # RNAshapeQC 0.99.8
 - Added an Installation section and relocated Data Processing section
 - Updated to Bioconductor style based on use of space and code syntax efficiency
