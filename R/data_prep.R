@@ -51,7 +51,7 @@ norm_pileup.gene <- function(pileupData, rnum=100, method=1, nCores=2) {
 
     normmat.gene <- do.call(cbind, BiocParallel::bplapply(seq_len(ncol(pileupData)), function(i) {
         norm_pileup.spl(pileup=pileupData[, i], rnum=rnum, method=method)
-    }, BPPARAM=BiocParallel::MulticoreParam(workers=nCores))
+    }, BPPARAM=BiocParallel::MulticoreParam(workers=nCores)))
     colnames(normmat.gene) <- colnames(pileupData)
 
     return(normmat.gene)

@@ -1,3 +1,6 @@
+# RNAshapeQC 0.99.10
+- Fixed a syntax error in `norm_pileup.gene()`
+
 # RNAshapeQC 0.99.9
 - Updated `norm_pileup.gene()` to use `nCores` directly instead of `nCores/2`
 
